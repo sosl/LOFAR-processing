@@ -1,0 +1,6 @@
+#!/usr/bin/env psrsh
+
+zap median window=16
+zap median
+zap mow robust
+zap mow
