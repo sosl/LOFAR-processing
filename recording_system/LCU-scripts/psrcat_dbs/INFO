@@ -1,0 +1,1 @@
+for station in 601 602 603 605 609; do scp *db glow${station}:~/.; ssh glow${station} "scp psrcat.db obs_lofar.db de${station}c:~/LCU-scripts/psrcat_dbs/; rm psrcat.db obs_lofar.db"; done

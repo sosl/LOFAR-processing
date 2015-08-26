@@ -1,0 +1,3 @@
+echo "Killing all formed beams by force"
+killall -v -9 beamctl
+
