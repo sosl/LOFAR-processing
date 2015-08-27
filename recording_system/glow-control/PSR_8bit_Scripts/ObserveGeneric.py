@@ -29,43 +29,61 @@ parser.add_argument("-W","--wait", dest="Wait",
         "to be finished in minutes (default: 3.0)")
 parser.add_argument("-v", "--verbose", dest="Verbose", action="store_true",
         help="Verbose (more detailed output)")
-parser.add_argument("-s", "--station", nargs=1, dest="Station",
+parser.add_argument("-s", "--station", dest="Station",
         help="Which station to control. Mandatory.")
+parser.add_argument("-R", "--recorder", nargs='+', dest="Recorders",
+        help="Recording machines to be used, white-space separated."
+        " Must be a list of three or four machines to record three "
+        " or four lanes. E.g., '-R C1 C2 C2' will record lane 1 to "
+        "C1 and lanes 2 and 3 to C2")
 
 args = parser.parse_args()
 
-if not options.Station:
-    print "You must choose the station!"
+lanes = 0
+if len(args.Recorders) == 3:
+    if args.Verbose:
+        print "Will record three lanes"
+    lanes = 3
+elif len(args.Recorders) == 4:
+    if args.Verbose:
+        print "Will record four lanes"
+    lanes = 4
+else:
+    print "You must provide exactly three or four recording machines!"
+    exit(1)
+
+if not args.Station:
+    print "You must choose a station!"
     exit(1)
 else:
     # extract the last three characters of station
-    station_id=options.Station[-3:]
+    station_id=args.Station[-3:]
     if not station_id == "601" and not station_id == "602" and not station_id == "603" and not station_id == "604" and not station_id == "605" and not station_id == "609":
-        print "Station " + options.Station + " with id " + station_id + " is unknown!"
+        print "Station " + args.Station + " with id " + station_id + " is unknown!"
         exit(1)
 
-if options.Verbose:
+if args.Verbose:
     sys.stdout = flushfile(sys.stdout)
  
-if not options.Pulsar:
+if not args.Pulsar:
     print "Need pulsar name! Use \"-h\" for help."
     exit(1)
-Pulsar = options.Pulsar
+Pulsar = args.Pulsar
 
 inttime = 5.
-if options.TInt:
-    inttime = float(options.TInt)
+if args.TInt:
+    inttime = float(args.TInt)
 
 endwait = 3.
-if options.Wait:
-    endwait = float(options.Wait)
+if args.Wait:
+    endwait = float(args.Wait)
 
 #get the Python-style time-tuple for 2 min from now and in UTC
 timesoon = time.gmtime(calendar.timegm(time.gmtime())+120)
 starttime = time.strftime("%Y-%m-%dT%H:%M:00Z",timesoon)
 
-if options.StartTime:
-    starttime = options.StartTime
+if args.StartTime:
+    starttime = args.StartTime
 
 
 sleeptime = 30.
@@ -73,40 +91,33 @@ sleeptime = 30.
 # Kill any remaining pointings first.
 lcucommand = "ssh glow"+station_id+" ssh de"+station_id+"c killpointing"
 lcuproc = os.popen( lcucommand )
-if options.Verbose:
+if args.Verbose:
     print "Killing existing pointings with:"
     print " - ", lcucommand
 lcuproc = False
 
 # start beams on the LCU
 lcucommand = "ssh glow"+station_id+" ssh de"+station_id+"c /data/home/user9/LCU-scripts/PSR_8bit_Scripts/observe-psr-3lane.csh " + Pulsar
-if options.Verbose:
+if args.Verbose:
     print "Starting beams on the LCU with:"
     print " - ", lcucommand
 lcuproc = os.popen(lcucommand)
 
 # Use LuMP
-print "Using LuMP"
+if args.Verbose:
+    print "Using LuMP"
 data_dir=time.strftime("%Y-%m-%d-%H:%M",timesoon)
-#the arguments for RunLuMP script are: pulsar Tint datadir starttime station lane verbosity
-lofar1command = "ssh lofarC3 '~/PSR_8bit_Scripts/RunLuMP_universal_3quarters.sh " + Pulsar + " " + str(inttime)  + " " + data_dir
-lofar1command += " " + starttime + " DE"+station_id+" 1 1"
-# the last thre arguments there are: station lane verbosity
-lofar1command += " >> ~/PSR_Logs/LuMP_"+data_dir+"_"+Pulsar+"_lane1.log 2>&1' "
+recorder_command = []
+for lane in range(0, lanes):
+    recorder_command.append("")
+    recorder_command[lane] = "ssh lofar" + args.Recorders[lane] + " '~/PSR_8bit_Scripts/RunLuMP_universal_3quarters.sh " + Pulsar + " " + str(inttime)  + " " + data_dir
+    recorder_command[lane] += " " + starttime + " DE"+station_id+" 1 1"
+    recorder_command[lane] += " >> ~/PSR_Logs/LuMP_"+data_dir+"_"+Pulsar+"_lane1.log 2>&1' "
 
-lofar2command = "ssh lofarC4 '~/PSR_8bit_Scripts/RunLuMP_universal_3quarters.sh " + Pulsar + "  " + str(inttime)  + " " + data_dir
-lofar2command += " " + starttime + " DE"+station_id+" 2 1"
-lofar2command += " >> ~/PSR_Logs/LuMP_"+data_dir+"_"+Pulsar+"_lane2.log 2>&1' "
-
-lofar3command = "ssh lofarC4 '~/PSR_8bit_Scripts/RunLuMP_universal_3quarters.sh " + Pulsar + " " + str(inttime)  + " " + data_dir
-lofar3command += " " + starttime + " DE"+station_id+" 3 1"
-lofar3command += " >> ~/PSR_Logs/LuMP_"+data_dir+"_"+Pulsar+"_lane3.log 2>&1' "
-
-if options.Verbose:
+if args.Verbose:
     print "Starting dumps on lofarN with:"
-    print lofar1command
-    print lofar2command
-    print lofar3command
+    for lane in range(0, lanes):
+        print recorder_command[lane]
 
 time.sleep(30)
 
@@ -126,20 +137,20 @@ nsleeps = int((endwait*60)/sleeptime)
 for n in range(nsleeps):
     if done(lofar1proc) and done(lofar2proc) and done(lofar3proc):
         break
-    if options.Verbose:
+    if args.Verbose:
         print "Apparently not finished yet, waiting "+str(sleeptime)+" seconds."        
     time.sleep(sleeptime)
 
 if not done(lofar1proc):
-    if options.Verbose:
+    if args.Verbose:
         print "Process for lofar1 still running, killing it softly."
     lofar1proc.terminate()
 if not done(lofar2proc):
-    if options.Verbose:
+    if args.Verbose:
         print "Process for lofar2 still running, killing it softly."
     lofar2proc.terminate()
 if not done(lofar3proc):
-    if options.Verbose:
+    if args.Verbose:
         print "Process for lofar3 still running, killing it softly."
     lofar3proc.terminate()
 
@@ -147,15 +158,15 @@ if not done(lofar3proc):
 time.sleep(1)
 
 if not done(lofar1proc):
-    if options.Verbose:
+    if args.Verbose:
         print "Process for lofar1 still running, killing it!"
     lofar1proc.kill()
 if not done(lofar2proc):
-    if options.Verbose:
+    if args.Verbose:
         print "Process for lofar2 still running, killing it!"
     lofar2proc.kill()
 if not done(lofar3proc):
-    if options.Verbose:
+    if args.Verbose:
         print "Process for lofar3 still running, killing it!"
     lofar3proc.kill()
 
