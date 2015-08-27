@@ -2,7 +2,7 @@
 
 import socket
 import time, calendar
-from optparse import OptionParser
+from argparse import ArgumentParser
 import os
 import subprocess as sb
 import sys
@@ -14,25 +14,25 @@ class flushfile(object):
         self.f.write(x)
         self.f.flush()
 
-parser = OptionParser();
+parser = ArgumentParser();
     
-parser.add_option("-P", "--psr", "--pulsar", dest="Pulsar",
+parser.add_argument("-P", "--psr", "--pulsar", dest="Pulsar",
         help="Name of the pulsar to be observed")
-parser.add_option("-T","--tint", dest="TInt",
+parser.add_argument("-T","--tint", dest="TInt",
         help="Integration time in minutes (default: 5.0)")
-parser.add_option("-S","--starttime", dest="StartTime",
+parser.add_argument("-S","--starttime", dest="StartTime",
         help="Time when to start the observation. "
         "(For LuMP: String in format yyyy-mm-ddThh:mm:ssZ) "
         "(default: start \"now\")")
-        parser.add_option("-W","--wait", dest="Wait",
+parser.add_argument("-W","--wait", dest="Wait",
         help="Maximum wait time after observation is supposed "
         "to be finished in minutes (default: 3.0)")
-parser.add_option("-v", "--verbose", dest="Verbose", action="store_true",
+parser.add_argument("-v", "--verbose", dest="Verbose", action="store_true",
         help="Verbose (more detailed output)")
-parser.add_option("-s", "--station", dest="Station",
+parser.add_argument("-s", "--station", nargs=1, dest="Station",
         help="Which station to control. Mandatory.")
 
-(options, args) = parser.parse_args()
+args = parser.parse_args()
 
 if not options.Station:
     print "You must choose the station!"
@@ -41,7 +41,7 @@ else:
     # extract the last three characters of station
     station_id=options.Station[-3:]
     if not station_id == "601" and not station_id == "602" and not station_id == "603" and not station_id == "604" and not station_id == "605" and not station_id == "609":
-        print "Station " + options.Station + " with id " + station_id " is unknown!"
+        print "Station " + options.Station + " with id " + station_id + " is unknown!"
         exit(1)
 
 if options.Verbose:
