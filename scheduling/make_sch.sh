@@ -1,13 +1,18 @@
 #!/bin/bash
 
-echo 'did you remember to set the dates (UTC!!)?'
-#format: MM.DD.YY HH:MM
+if [ $# -ne 4 ]
+then
+  echo usage: $0 BEGIN_DAY BEGIN_TIME END_DAY END_TIME
+  echo format: '{BEGIN,END}_DAY' mm.dd.yy
+  echo         '{BEGIN,END}_TIME' hh:mm
+  exit
+fi
 
-#for station in DE601 DE603 DE605
-#for station in DE601 DE602 DE603 DE605 DE609
-for station in DE601 
+set -o nounset
+
+for station in DE601 DE602 DE603 DE605
 do
-	python observePulsars.py -v 0 -b '08.14.15 09:45' -d '08.17.15 08:45' -s ${station} -o ${station}.sch -D 5000 -I 200 pulsars_${station}.dat
+	python observePulsars.py -v 0 -b $1 $2 -d $3 $4 -s ${station} -o ${station}.sch -D 5000 -I 200 pulsars_${station}.dat
 	mv gantt.svg ${station}.svg
 done
 
