@@ -48,6 +48,8 @@ elif len(args.Recorders) == 4:
     if args.Verbose:
         print "Will record four lanes"
     lanes = 4
+    print "Currently recording four lanes not supported. Need to upgrade the RunLuMP scripts first!"
+    exit(1)
 else:
     print "You must provide exactly three or four recording machines!"
     exit(1)
@@ -121,54 +123,43 @@ if args.Verbose:
 
 time.sleep(30)
 
-lofar1proc = sb.Popen(lofar1command,shell=True,stdin=sb.PIPE, stdout=sb.PIPE, stderr=sb.PIPE, close_fds=True)
-lofar2proc = sb.Popen(lofar2command,shell=True,stdin=sb.PIPE, stdout=sb.PIPE, stderr=sb.PIPE, close_fds=True)
-lofar3proc = sb.Popen(lofar3command,shell=True,stdin=sb.PIPE, stdout=sb.PIPE, stderr=sb.PIPE, close_fds=True)
+recorder_processes = []
+for lane in range(0, lanes):
+    recorder_processes.append("")
+    recorder_processes[lane] = sb.Popen(recorder_command[lane], shell=True,
+            stdin=sb.PIPE, stdout=sb.PIPE, stderr=sb.PIPE, close_fds=True)
 
 waitminutes = inttime+1.
 print "Waiting "+str(waitminutes)+" min for the observation to finish"
 time.sleep(waitminutes*60.) #wait till udpdump starts
 
 def done(p):
+    # poll the return code. If still running, will return None
     return p.poll() is not None
 
 nsleeps = int((endwait*60)/sleeptime)
 
 for n in range(nsleeps):
-    if done(lofar1proc) and done(lofar2proc) and done(lofar3proc):
+    if all(done(record_process) for record_process in recorder_processes):
         break
     if args.Verbose:
         print "Apparently not finished yet, waiting "+str(sleeptime)+" seconds."        
     time.sleep(sleeptime)
 
-if not done(lofar1proc):
-    if args.Verbose:
-        print "Process for lofar1 still running, killing it softly."
-    lofar1proc.terminate()
-if not done(lofar2proc):
-    if args.Verbose:
-        print "Process for lofar2 still running, killing it softly."
-    lofar2proc.terminate()
-if not done(lofar3proc):
-    if args.Verbose:
-        print "Process for lofar3 still running, killing it softly."
-    lofar3proc.terminate()
+for lane in range(0, lanes):
+    if not done(recorder_processes[lane]):
+        if args.Verbose:
+            print "Process for lane"+ str(lane) + " still running, killing it softly."
+        recorder_processes[lane].terminate()
 
 #Give processes a chance to terminate gracefully
 time.sleep(1)
 
-if not done(lofar1proc):
-    if args.Verbose:
-        print "Process for lofar1 still running, killing it!"
-    lofar1proc.kill()
-if not done(lofar2proc):
-    if args.Verbose:
-        print "Process for lofar2 still running, killing it!"
-    lofar2proc.kill()
-if not done(lofar3proc):
-    if args.Verbose:
-        print "Process for lofar3 still running, killing it!"
-    lofar3proc.kill()
+for lane in range(0, lanes):
+    if not done(recorder_processes[lane]):
+        if args.Verbose:
+            print "Process for lane" + str(lane) + " still running, killing it!"
+        recorder_processes[lane].kill()
 
 print "stopping beams:"
 lcucommand = "ssh glow"+station_id+" ssh de"+station_id+"c killpointing " # + Pulsar
