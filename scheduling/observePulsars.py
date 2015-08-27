@@ -9,7 +9,7 @@ Jörn Künsemöller
 
 
 import errno
-import getopt
+import argparse
 import dateutil.parser
 import astropysics.obstools as obstools
 import astropysics.coords as coords
@@ -634,8 +634,8 @@ def observe(schedule, observationCmd):
 
 
 # Main application
-def main(argv):
-
+#def main(argv):
+def main():
     observationList = []
     observationCmd = defaultObservationCmd
     keepIdle = defaultAllowIdle
@@ -652,77 +652,133 @@ def main(argv):
     end = None
     deadline = None
 
-    # Parse arguments and change settings accordingly:
-    try:
-        opts, args = getopt.getopt(argv, "ho:b:e:d:ki:I:T:D:c:v:s:")
-    except getopt.GetoptError:
-        print "! ERROR--> Could not parse arguments!", os.linesep, "Try 'reducePulsars.py -h' for help!"
-        sys.exit(1)
-    except:
-        raise
-    for opt, arg in opts:
-        if opt == '-h':
-            print "================="
-            print "observePulsars.py"
-            print "================="
-            print "Executes a list of desired observations that are specified in the input file."
-            print "The observations are scheduled in an appropriate sequential order based on"
-            print "visibility. The script will terminate after all observations have finished."
-            print "An optional begin time or timeframe can be specified: "
-            print "No observation will start before the begin time, but it might start later."
-            print "Observations may be scheduled to stop after the specified end time, but with"
-            print "a penalty."
-            print "No observation will take place after the deadline."
-            print "------"
-            print "Usage: "
-            print "observePulsars.py [options] <file_with_pulsars/durations>"
-            print "------"
-            print "Options:"
-            print "-h            --> Display this help"
-            print "-o <path>     --> Output for final schedule"
-            print "-i <path>     --> Input schedule from file (You may add new observations, but this schedule's times are fixed)"
-            print "-I <int>      --> Number of iterations (default 20)"
-            print "-b <datetime> --> Begin time"
-            print "-e <datetime> --> End time (soft)"
-            print "-d <datetime> --> Deadline (strict)"
-            print "-s <string>   --> Telescope site"
-            print "-k            --> Keep idle times"
-            print "-T <int>      --> Penalty for non-optimal timing  (default: 2/min)"
-            print "-D <int>      --> Penalty for dropped observation (default: 500)"
-            print "-c <string>   --> Custom observator command"
-            print "-v <int>      --> Verbose level (0-4), where 4 is a lot (I mean, seriously! Don't do it.)"
-            print "-l <path>     --> Log to path"
-            print "-----------------"
-            sys.exit()
-        elif opt == '-o':
-            outputPath = os.path.expanduser(arg)
-        elif opt == '-i':
-            inputPath = os.path.expanduser(arg)
-        elif opt == '-I':
-            initialRetries = int(arg)
-        elif opt == '-b':
-            begin = dateutil.parser.parse(arg)
-            print "Begin time:",begin
-        elif opt == '-e':
-            end = dateutil.parser.parse(arg)
-            print "End time:",end
-        elif opt == '-d':
-            deadline = dateutil.parser.parse(arg)
-            print "Deadline:",deadline
-        elif opt == '-k':
-            keepIdle = True
-        elif opt == '-T':
-            timePenalty = int(arg)
-        elif opt == '-D':
-            dropPenalty = int(arg)
-        elif opt == '-c':
-            observationCmd = arg
-        elif opt == '-v':
-            verbose = int(arg)
-        elif opt == '-l':
-            logPath = arg
-        elif opt == '-s':
-            location = arg
+    #parser = argparse.ArgumentParser(description="This code will create a"
+    #" schedule by randomly shuffling the input list of pulsars to find the"
+    #" optimal observing time")
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-o', '--output-file', dest='outputPath', help="Output file")
+
+    parser.add_argument('-b', '--begin-date', nargs=2, dest='begin', help="Start date, format mm.dd.yy hh:mm")
+    parser.add_argument('-e', '--end-date', nargs=2, dest='end', help="End date, format mm.dd.yy hh:mm")
+    parser.add_argument('-d', '--deadline-date', nargs=2, dest='deadline', help="Strict end date, format mm.dd.yy hh:mm")
+    parser.add_argument('-s', '--site', dest='location', help="Telescope")
+
+    parser.add_argument('-k', '--keep-idle-times', dest='keepIdle', help="Keep idle times(?)")
+
+    parser.add_argument('-I', '--iterations', dest='initialRetries', type=int, help="Number of iterations")
+    parser.add_argument('-T', '--penalty-non-optimal', dest='timePenalty', help="Penalty for non-optimal observing time")
+    parser.add_argument('-D', '--penalty-drop-pulsar', dest='dropPenalty', type=int, help="Penalty for dropping a pulsar from the schedule", default=500)
+
+    parser.add_argument('-c', '--observing-command', dest='observationCmd', help="Custom observing command")
+    parser.add_argument('-i', '--input-schedule', dest='inputPath', help="Input schedule")
+
+    parser.add_argument('-v', '--verbosity', dest='verbose', type=int)
+    parser.add_argument('-l', '--log-file', dest='logPath', help="Logfile")
+
+    parser.add_argument('inputList', metavar='INPUT_FILE', nargs=1, help="Input file with a list of pulsars")
+
+    args = parser.parse_args()
+
+    if args.outputPath :
+        outputPath = args.outputPath
+    if args.inputPath :
+        inputPath = args.inputPath
+    if args.initialRetries :
+        initialRetries = args.initialRetries
+    if args.begin :
+        begin = dateutil.parser.parse(args.begin[0] + " " + args.begin[1])
+    if args.end :
+        end = dateutil.parser.parse(args.end[0] + " " + args.end[1])
+    if args.deadline :
+        deadline = dateutil.parser.parse(args.deadline[0] + " " + args.deadline[1])
+    if args.location :
+        location = args.location
+    if args.keepIdle :
+        keepIdle = args.keepIdle
+    if args.timePenalty :
+        timePenalty = args.timePenalty
+    if args.dropPenalty :
+        dropPenalty = args.dropPenalty
+    if args.observationCmd :
+        observationCmd = args.observationCmd
+    if args.verbose :
+        verbose = args.verbose
+    if args.logPath :
+        logPath = args.logPath
+    inputList = args.inputList[0]
+
+    ## Parse arguments and change settings accordingly:
+    #try:
+        #opts, args = getopt.getopt(argv, "ho:b:e:d:ki:I:T:D:c:v:s:")
+    #except getopt.GetoptError:
+        #print "! ERROR--> Could not parse arguments!", os.linesep, "Try 'reducePulsars.py -h' for help!"
+        #sys.exit(1)
+    #except:
+        #raise
+    #for opt, arg in opts:
+        #if opt == '-h':
+            #print "================="
+            #print "observePulsars.py"
+            #print "================="
+            #print "Executes a list of desired observations that are specified in the input file."
+            #print "The observations are scheduled in an appropriate sequential order based on"
+            #print "visibility. The script will terminate after all observations have finished."
+            #print "An optional begin time or timeframe can be specified: "
+            #print "No observation will start before the begin time, but it might start later."
+            #print "Observations may be scheduled to stop after the specified end time, but with"
+            #print "a penalty."
+            #print "No observation will take place after the deadline."
+            #print "------"
+            #print "Usage: "
+            #print "observePulsars.py [options] <file_with_pulsars/durations>"
+            #print "------"
+            #print "Options:"
+            #print "-h            --> Display this help"
+            #print "-o <path>     --> Output for final schedule"
+            #print "-i <path>     --> Input schedule from file (You may add new observations, but this schedule's times are fixed)"
+            #print "-I <int>      --> Number of iterations (default 20)"
+            #print "-b <datetime> --> Begin time"
+            #print "-e <datetime> --> End time (soft)"
+            #print "-d <datetime> --> Deadline (strict)"
+            #print "-s <string>   --> Telescope site"
+            #print "-k            --> Keep idle times"
+            #print "-T <int>      --> Penalty for non-optimal timing  (default: 2/min)"
+            #print "-D <int>      --> Penalty for dropped observation (default: 500)"
+            #print "-c <string>   --> Custom observator command"
+            #print "-v <int>      --> Verbose level (0-4), where 4 is a lot (I mean, seriously! Don't do it.)"
+            #print "-l <path>     --> Log to path"
+            #print "-----------------"
+            #sys.exit()
+        #elif opt == '-o':
+            #outputPath = os.path.expanduser(arg)
+        #elif opt == '-i':
+            #inputPath = os.path.expanduser(arg)
+        #elif opt == '-I':
+            #initialRetries = int(arg)
+        #elif opt == '-b':
+            #begin = dateutil.parser.parse(arg)
+            #print "Begin time:",begin
+        #elif opt == '-e':
+            #end = dateutil.parser.parse(arg)
+            #print "End time:",end
+        #elif opt == '-d':
+            #deadline = dateutil.parser.parse(arg)
+            #print "Deadline:",deadline
+        #elif opt == '-k':
+            #keepIdle = True
+        #elif opt == '-T':
+            #timePenalty = int(arg)
+        #elif opt == '-D':
+            #dropPenalty = int(arg)
+        #elif opt == '-c':
+            #observationCmd = arg
+        #elif opt == '-v':
+            #verbose = int(arg)
+        #elif opt == '-l':
+            #logPath = arg
+        #elif opt == '-s':
+            #location = arg
 
 
     # copy stdout to log file
@@ -738,17 +794,15 @@ def main(argv):
         print "observePulsars.py"
         print "================="
 
-    if len(args) > 0:
-        inputfile = args[0]
-        if verbose > 0:
-            print 'Reading desired observations from', inputfile,"...",
-        with open(inputfile) as f:
-            lines = f.readlines()
-            for line in lines:
-                if not line.startswith('#'):
-                    observationList.append(line.strip().split())
-        if verbose > 0:
-            print "done."
+    if verbose > 0:
+        print 'Reading desired observations from', inputList,"...",
+    with open(inputList) as f:
+        lines = f.readlines()
+        for line in lines:
+            if not line.startswith('#'):
+                observationList.append(line.strip().split())
+    if verbose > 0:
+        print "done."
 
     if inputPath != None:
         schedule = []
@@ -831,5 +885,6 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    #main(sys.argv[1:])
+    main()
 
