@@ -676,6 +676,9 @@ def main():
     parser.add_argument('-v', '--verbosity', dest='verbose', type=int)
     parser.add_argument('-l', '--log-file', dest='logPath', help="Logfile")
 
+    parser.add_argument('-O', '--observe', dest='observe', action ='store_true',
+            help="Run the created schedule immediately. This changes the format of the schedule file!")
+
     parser.add_argument('inputList', metavar='INPUT_FILE', nargs=1, help="Input file with a list of pulsars")
 
     args = parser.parse_args()
@@ -707,79 +710,6 @@ def main():
     if args.logPath :
         logPath = args.logPath
     inputList = args.inputList[0]
-
-    ## Parse arguments and change settings accordingly:
-    #try:
-        #opts, args = getopt.getopt(argv, "ho:b:e:d:ki:I:T:D:c:v:s:")
-    #except getopt.GetoptError:
-        #print "! ERROR--> Could not parse arguments!", os.linesep, "Try 'reducePulsars.py -h' for help!"
-        #sys.exit(1)
-    #except:
-        #raise
-    #for opt, arg in opts:
-        #if opt == '-h':
-            #print "================="
-            #print "observePulsars.py"
-            #print "================="
-            #print "Executes a list of desired observations that are specified in the input file."
-            #print "The observations are scheduled in an appropriate sequential order based on"
-            #print "visibility. The script will terminate after all observations have finished."
-            #print "An optional begin time or timeframe can be specified: "
-            #print "No observation will start before the begin time, but it might start later."
-            #print "Observations may be scheduled to stop after the specified end time, but with"
-            #print "a penalty."
-            #print "No observation will take place after the deadline."
-            #print "------"
-            #print "Usage: "
-            #print "observePulsars.py [options] <file_with_pulsars/durations>"
-            #print "------"
-            #print "Options:"
-            #print "-h            --> Display this help"
-            #print "-o <path>     --> Output for final schedule"
-            #print "-i <path>     --> Input schedule from file (You may add new observations, but this schedule's times are fixed)"
-            #print "-I <int>      --> Number of iterations (default 20)"
-            #print "-b <datetime> --> Begin time"
-            #print "-e <datetime> --> End time (soft)"
-            #print "-d <datetime> --> Deadline (strict)"
-            #print "-s <string>   --> Telescope site"
-            #print "-k            --> Keep idle times"
-            #print "-T <int>      --> Penalty for non-optimal timing  (default: 2/min)"
-            #print "-D <int>      --> Penalty for dropped observation (default: 500)"
-            #print "-c <string>   --> Custom observator command"
-            #print "-v <int>      --> Verbose level (0-4), where 4 is a lot (I mean, seriously! Don't do it.)"
-            #print "-l <path>     --> Log to path"
-            #print "-----------------"
-            #sys.exit()
-        #elif opt == '-o':
-            #outputPath = os.path.expanduser(arg)
-        #elif opt == '-i':
-            #inputPath = os.path.expanduser(arg)
-        #elif opt == '-I':
-            #initialRetries = int(arg)
-        #elif opt == '-b':
-            #begin = dateutil.parser.parse(arg)
-            #print "Begin time:",begin
-        #elif opt == '-e':
-            #end = dateutil.parser.parse(arg)
-            #print "End time:",end
-        #elif opt == '-d':
-            #deadline = dateutil.parser.parse(arg)
-            #print "Deadline:",deadline
-        #elif opt == '-k':
-            #keepIdle = True
-        #elif opt == '-T':
-            #timePenalty = int(arg)
-        #elif opt == '-D':
-            #dropPenalty = int(arg)
-        #elif opt == '-c':
-            #observationCmd = arg
-        #elif opt == '-v':
-            #verbose = int(arg)
-        #elif opt == '-l':
-            #logPath = arg
-        #elif opt == '-s':
-            #location = arg
-
 
     # copy stdout to log file
     log = os.path.expanduser(logPath + os.path.sep +"observePulsars."+ str(datetime.datetime.now()) +".log")
@@ -858,30 +788,30 @@ def main():
     with open(outputPath, 'w') as f:
         if verbose > 0:
             print "Writing schedule to", outputPath
-        f.write("# TADAM Schedule created by observePulsars.py\n")
-        f.write("# Pulsar \t Duration \t Start UTC \t Stop UTC \t Optimal UTC \t Priority\t Start LST \t Stop LST\n")
+        #f.write("# Pulsar \t Duration \t Start UTC \t Stop UTC \t Optimal UTC \t Priority\t Start LST \t Stop LST\n")
         for (pulsar, start, stop, optimalUTC, priority) in schedule:
             #3 lines inserted by STEFAN
             start_date = matplotlib.dates.date2num(start)
             stop_date = matplotlib.dates.date2num(stop)
             duration = stop_date - start_date
             # '"\t"+str(duration)+' as well as LST inserted by STEFAN
-            line = pulsar+"\t"+str(duration)+"\t"+str(start)+"\t"+str(stop)+"\t"+str(optimalUTC)+"\t"+str(priority)+"\t"+site.localSiderialTime(start, returntype="string")+"\t"+site.localSiderialTime(stop, returntype="string")
+            if args.observe:
+                line = pulsar+"\t"+str(duration)+"\t"+str(start)+"\t"+str(stop)+"\t"+str(optimalUTC)+"\t"+str(priority)+"\t"+site.localSiderialTime(start, returntype="string")+"\t"+site.localSiderialTime(stop, returntype="string")
+            else:
+                line = '# ' + pulsar + ' LST: ' + site.localSiderialTime(start, returntype="string")[0:5]
+                line += " UTC: " + str(start)[0:16] + "\n"
+                line += pulsar + " " + str(int(duration*24*60+0.5)-2) + " "
+                line += str(start)[0:16]
             f.write(line+"\n")
 
     # start observation
-    for i in range(3):
-        print "Observe that schedule now? (y,N)"
-        sys.stdout.flush()
-        input = raw_input().strip()
-        if input == '' or input == 'n' or input == 'N':
-            if verbose > 0:
-                print "You can load and observe your schedule later with option '-i",outputPath+"'"
-            break
-        if input == 'y' or input == 'Y':
-            if verbose > 0:
-                print "Start observing..."
-            observe(schedule, os.path.expanduser(observationCmd))
+    if args.observe:
+        if verbose > 0:
+            print "Start observing..."
+        observe(schedule, os.path.expanduser(observationCmd))
+    else:
+        if verbose > 0:
+            print "A script in a list format was written to " + outputPath
 
 
 if __name__ == '__main__':
