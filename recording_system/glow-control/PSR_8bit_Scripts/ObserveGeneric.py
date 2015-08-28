@@ -40,14 +40,17 @@ parser.add_argument("-R", "--recorder", nargs='+', dest="Recorders",
 args = parser.parse_args()
 
 lanes = 0
+subband_offset = None
 if len(args.Recorders) == 3:
     if args.Verbose:
         print "Will record three lanes"
     lanes = 3
+    subband_offset = 93
 elif len(args.Recorders) == 4:
     if args.Verbose:
         print "Will record four lanes"
     lanes = 4
+    subband_offset = 12
     print "Currently recording four lanes not supported. Need to upgrade the RunLuMP scripts first!"
     exit(1)
 else:
@@ -112,9 +115,12 @@ data_dir=time.strftime("%Y-%m-%d-%H:%M",timesoon)
 recorder_command = []
 for lane in range(0, lanes):
     recorder_command.append("")
-    recorder_command[lane] = "ssh lofar" + args.Recorders[lane] + " '~/PSR_8bit_Scripts/RunLuMP_universal_3quarters.sh " + Pulsar + " " + str(inttime)  + " " + data_dir
-    recorder_command[lane] += " " + starttime + " DE"+station_id+" 1 1"
-    recorder_command[lane] += " >> ~/PSR_Logs/LuMP_"+data_dir+"_"+Pulsar+"_lane1.log 2>&1' "
+    recorder_command[lane] = "ssh lofar" + args.Recorders[lane] + " '~/PSR_8bit_Scripts/RunLuMP_universal.sh "
+    recorder_command[lane] += Pulsar + " " + str(inttime)  + " " + data_dir
+    recorder_command[lane] += " " + starttime + " DE"+station_id + " " + str(lane) + " "
+    recorder_command[lane] += subband_offset + " 1" # 1 here is the verbosity level 
+    recorder_command[lane] += " >> ~/PSR_Logs/LuMP_"+data_dir+"_"+Pulsar+"_lane"
+    recorder_command[lane] += str(lane) + ".log 2>&1' "
 
 if args.Verbose:
     print "Starting dumps on lofarN with:"
