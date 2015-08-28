@@ -9,9 +9,9 @@ set -o errexit
 
 export LC_NUMERIC=en_US.UTF-8
 export PSRCAT_RUNDIR=/data/home/user9/LCU-scripts/psrcat_dbs
-export PSRCAT_FILE ${PSRCAT_RUNDIR}/psrcat.db
+export PSRCAT_FILE=${PSRCAT_RUNDIR}/psrcat.db
 
-if [[ $# -ne 2 ]] || [[ $# -ne 3 ]]
+if [[ $# -ne 2 ]] && [[ $# -ne 3 ]]
 then
   echo This observing script has two modes:
   echo 
@@ -29,7 +29,7 @@ then
   echo
   echo Mode 2 : Observe a known pulsar and use provided range of beamlets and subbands:
   echo usage: $0 PSR BEAMLET_RANGE SUBBAND_RANGE
-  echo E.g.:  $0 B0329+54 0:365 93:458A
+  echo E.g.:  $0 B0329+54 0:365 93:458
   echo 
   echo Make sure that the RSPDriver configuration reflects your choice of lanes.
   exit
@@ -58,7 +58,7 @@ then
 fi
 
 psr_info=$(psrcat -all -o short -nohead -nonumber -c "raj decj" $psr)
-pos_rad=$(echo $psr_info[1] $psr_info[2] | sed s/\\:/" "/g | awk -v pi=3.1415926535 '{printf "%.6f %.6f\n",(($1+(($2+($3/60.0))/60.0))/24.0)*2*pi,(($4+(($5+($6/60.0))/60.0))/360.0)*2*pi}')
+pos_rad=($(echo $psr_info[1] $psr_info[2] | sed s/\\:/" "/g | awk -v pi=3.1415926535 '{printf "%.6f %.6f\n",(($1+(($2+($3/60.0))/60.0))/24.0)*2*pi,(($4+(($5+($6/60.0))/60.0))/360.0)*2*pi}'))
 ra=${pos_rad[0]}
 dec=${pos_rad[1]}
 
