@@ -99,7 +99,7 @@ if args.Verbose:
 lcuproc = False
 
 # start beams on the LCU
-lcucommand = "ssh glow"+station_id+" ssh de"+station_id+"c /data/home/user9/LCU-scripts/PSR_8bit_Scripts/observe-psr-3lane.csh " + Pulsar
+lcucommand = "ssh glow" + station_id + " ssh de"+station_id + "c /data/home/user9/LCU-scripts/PSR_8bit_Scripts/observe-psr-universal.sh " + Pulsar + " " + str(lanes)
 if args.Verbose:
     print "Starting beams on the LCU with:"
     print " - ", lcucommand
