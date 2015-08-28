@@ -117,10 +117,10 @@ for lane in range(0, lanes):
     recorder_command.append("")
     recorder_command[lane] = "ssh lofar" + args.Recorders[lane] + " '~/PSR_8bit_Scripts/RunLuMP_universal.sh "
     recorder_command[lane] += Pulsar + " " + str(inttime)  + " " + data_dir
-    recorder_command[lane] += " " + starttime + " DE"+station_id + " " + str(lane) + " "
-    recorder_command[lane] += subband_offset + " 1" # 1 here is the verbosity level 
+    recorder_command[lane] += " " + starttime + " DE"+station_id + " " + str(lane+1) + " "
+    recorder_command[lane] += str(subband_offset) + " 1" # 1 here is the verbosity level 
     recorder_command[lane] += " >> ~/PSR_Logs/LuMP_"+data_dir+"_"+Pulsar+"_lane"
-    recorder_command[lane] += str(lane) + ".log 2>&1' "
+    recorder_command[lane] += str(lane+1) + ".log 2>&1' "
 
 if args.Verbose:
     print "Starting dumps on lofarN with:"
@@ -155,7 +155,7 @@ for n in range(nsleeps):
 for lane in range(0, lanes):
     if not done(recorder_processes[lane]):
         if args.Verbose:
-            print "Process for lane"+ str(lane) + " still running, killing it softly."
+            print "Process for lane"+ str(lane+1) + " still running, killing it softly."
         recorder_processes[lane].terminate()
 
 #Give processes a chance to terminate gracefully
@@ -164,7 +164,7 @@ time.sleep(1)
 for lane in range(0, lanes):
     if not done(recorder_processes[lane]):
         if args.Verbose:
-            print "Process for lane" + str(lane) + " still running, killing it!"
+            print "Process for lane" + str(lane+1) + " still running, killing it!"
         recorder_processes[lane].kill()
 
 print "stopping beams:"
