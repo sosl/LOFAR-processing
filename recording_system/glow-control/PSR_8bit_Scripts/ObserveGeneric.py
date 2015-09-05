@@ -30,7 +30,7 @@ def monitor_process( p, notify, interrupt, verbose_out, timeout, sleep_interval 
             time.sleep(sleep_interval)
     #If still running, undertake some action:
     if notify:
-        #send an email
+        #TODO send an email
     if interrupt:
         #kill the process
         p.terminate()
@@ -52,6 +52,12 @@ parser.add_argument("-P", "--psr", "--pulsar", dest="Pulsar",
         help="Name of the pulsar to be observed")
 parser.add_argument("-T","--tint", dest="TInt",
         help="Integration time in minutes (default: 5.0)")
+parser.add_argument("--tolerance", dest="Tolerance",
+        help="If observation late by these many minutes, print a warning and notify the observer")
+parser.add_argument("--hard-tolerance", dest="HardTolerance",
+        help="If observation late by these many minutes, shorten the observation")
+parser.add_argument("-O", "--observer", dest="Observer",
+        help="Email of the observer for observing notifications")
 parser.add_argument("-S","--starttime", dest="StartTime",
         help="Time when to start the observation. "
         "(For LuMP: String in format yyyy-mm-ddThh:mm:ssZ) "
@@ -119,9 +125,37 @@ if args.Wait:
 timesoon = time.gmtime(calendar.timegm(time.gmtime())+120)
 starttime = time.strftime("%Y-%m-%dT%H:%M:00Z",timesoon)
 
+# Tolerance for late observations, in minutes. Beyond this, email the observer
+tolerance = 12.
+if args.Tolerance:
+    tolerance = args.Tolerance
+
+# Hard tolerance for late observations. Beyond this, shorten the observation
+hardTolerance = 30.
+if args.HardTolerance:
+    hardTolerance  = args.HardTolerance
+
 if args.StartTime:
     starttime = args.StartTime
-
+    # if starttime is significantly later than now, notify the observer
+    # could use:
+    #    strptime to construct a tuple from requested start time
+    #    use calendar.timegm() to convert to seconds since Epoch
+    starttime_tuple = time.strptime(starttime, "%Y-%m-%dT%H:%M:00Z")
+    timediff = calendar.timegm(timesoon) - calendar.timegm(starttime_tuple)
+    if timediff/60. > hardTolerance:
+        #shorten the observation:
+        inttime-=int(timediff/60.)
+        if inttime < 0:
+            print "Observation late by " +str(timediff/60.)+ " minutes which is more than requested integration time of " +str(inttime) + ", skipping."
+            #TODO notify the observer
+            exit(1)
+        elif args.Verbose:
+            print "Shortened the observation by " + str(int(timediff/60.)) + " minutes"
+    elif timediff/60. > tolerance:
+        if args.Verbose:
+            print "Observation late by " + str(int(timediff/60.)) + " minutes."
+        #TODO notify the observer
 
 sleeptime = 30.
 
