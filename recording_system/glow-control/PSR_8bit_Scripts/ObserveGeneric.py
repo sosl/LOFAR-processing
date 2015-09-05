@@ -14,6 +14,10 @@ class flushfile(object):
         self.f.write(x)
         self.f.flush()
 
+def done(p):
+    # poll the return code. If still running, will return False
+    return p.poll() is not None
+
 parser = ArgumentParser();
     
 parser.add_argument("-P", "--psr", "--pulsar", dest="Pulsar",
@@ -138,10 +142,6 @@ for lane in range(0, lanes):
 waitminutes = inttime+1.
 print "Waiting "+str(waitminutes)+" min for the observation to finish"
 time.sleep(waitminutes*60.) #wait till udpdump starts
-
-def done(p):
-    # poll the return code. If still running, will return None
-    return p.poll() is not None
 
 nsleeps = int((endwait*60)/sleeptime)
 
