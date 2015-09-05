@@ -14,9 +14,37 @@ class flushfile(object):
         self.f.write(x)
         self.f.flush()
 
+# poll the return code. If still running, will return False
 def done(p):
-    # poll the return code. If still running, will return False
     return p.poll() is not None
+
+#monitor execution of a command and if it is not finished after a certain time
+#undertake an action, either notify the observer, or interrupt the command
+#timeout sleepinterval in seconds!
+#If process finished successfully return True. Otherwise return False
+def monitor_process( p, notify, interrupt, verbose_out, timeout, sleep_interval ):
+    #First allow the process to run for some amount of time (timeout) and check every sleep_interval seconds
+    iterations = int((sleep_interval)/timeout)
+    for n in range(iterations):
+        if not done(p):
+            time.sleep(sleep_interval)
+    #If still running, undertake some action:
+    if notify:
+        #send an email
+    if interrupt:
+        #kill the process
+        p.terminate()
+        time.sleep(1)
+        #Give processes a chance to terminate gracefully
+        if not done(p):
+            p.kill()
+    if len(verbose_out) > 0:
+        print verbose_out
+    final_status = p.poll()
+    if (final_status == bool):
+        return final_status
+    else:
+        return False
 
 parser = ArgumentParser();
     
@@ -99,18 +127,25 @@ sleeptime = 30.
 
 # Kill any remaining pointings first.
 lcucommand = "ssh glow"+station_id+" ssh de"+station_id+"c killpointing"
-lcuproc = os.popen( lcucommand )
+lcuproc = sb.Popen( lcucommand )
 if args.Verbose:
     print "Killing existing pointings with:"
     print " - ", lcucommand
-lcuproc = False
+ssh_success = monitor_process( lcuproc, notify=args.Observer_email, verbose_out="killpointing on LCU of " + station_id + " failed", timeout=180, sleep_interval=5 )
+# Wait for successful end of the ssh or an intervation of the observer:
+while not ssh_success:
+    ssh_success = monitor_process( lcuproc, notify=args.Observer_email, verbose_out="killpointing on LCU of " + station_id + " failed", timeout=180, sleep_interval=5 )
 
 # start beams on the LCU
 lcucommand = "ssh glow" + station_id + " ssh de"+station_id + "c /data/home/user9/LCU-scripts/PSR_8bit_Scripts/observe-psr-universal.sh " + Pulsar + " " + str(lanes)
 if args.Verbose:
     print "Starting beams on the LCU with:"
     print " - ", lcucommand
-lcuproc = os.popen(lcucommand)
+lcuproc = sb.Popen(lcucommand)
+ssh_success = monitor_process( lcuproc, notify=args.Observer_email, verbose_out="Forming a beam on " + station_id + " towards " + Pulsar + " failed", timeout=180, sleep_interval=5 )
+# Wait for successful end of the ssh or an intervation of the observer:
+while not ssh_success:
+    ssh_success = monitor_process( lcuproc, notify=args.Observer_email, verbose_out="Forming a beam on " + station_id + " towards " + Pulsar + " failed", timeout=180, sleep_interval=5 )
 
 # Use LuMP
 if args.Verbose:
@@ -141,7 +176,7 @@ for lane in range(0, lanes):
 
 waitminutes = inttime+1.
 print "Waiting "+str(waitminutes)+" min for the observation to finish"
-time.sleep(waitminutes*60.) #wait till udpdump starts
+time.sleep(waitminutes*60.) #wait till udpdump starts. Could instead monitor the status of the process. If failed, notify the observer
 
 nsleeps = int((endwait*60)/sleeptime)
 
