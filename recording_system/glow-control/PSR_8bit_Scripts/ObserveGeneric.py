@@ -6,6 +6,9 @@ from argparse import ArgumentParser
 import os
 import subprocess as sb
 import sys
+#for email notifications:
+import smtplib
+from email.mime.text import MIMEText
 
 class flushfile(object):
     def __init__(self, f):
@@ -17,6 +20,17 @@ class flushfile(object):
 # poll the return code. If still running, will return False
 def done(p):
     return p.poll() is not None
+
+me = "observer@glow-control"
+def send_message( subject, text, recipients, smtp ):
+    message = MIMEText(text)
+    message['Subject']=subject
+    message['From'] = me
+    message['To'] = recipients[0]
+    for i in range (1,len(recipients)):
+        message['To'] += "," + recipients[i]
+    smtp.sendmail(me, recipients, msg.as_string())
+
 
 #monitor execution of a command and if it is not finished after a certain time
 #undertake an action, either notify the observer, or interrupt the command
@@ -46,7 +60,10 @@ def monitor_process( p, notify, interrupt, verbose_out, timeout, sleep_interval 
     else:
         return False
 
+
 parser = ArgumentParser();
+
+s = None
     
 parser.add_argument("-P", "--psr", "--pulsar", dest="Pulsar",
         help="Name of the pulsar to be observed")
@@ -56,8 +73,8 @@ parser.add_argument("--tolerance", dest="Tolerance",
         help="If observation late by these many minutes, print a warning and notify the observer")
 parser.add_argument("--hard-tolerance", dest="HardTolerance",
         help="If observation late by these many minutes, shorten the observation")
-parser.add_argument("-O", "--observer", dest="Observer",
-        help="Email of the observer for observing notifications")
+parser.add_argument("-O", "--observer", nargs='*', dest="Observers",
+        help="Email of the observer(s) for observing notifications")
 parser.add_argument("-S","--starttime", dest="StartTime",
         help="Time when to start the observation. "
         "(For LuMP: String in format yyyy-mm-ddThh:mm:ssZ) "
@@ -120,6 +137,11 @@ if args.TInt:
 endwait = 3.
 if args.Wait:
     endwait = float(args.Wait)
+
+observers = []
+if args.Observers:
+    observers = args.Observers
+    s = smtplib.SMTP('localhost')
 
 #get the Python-style time-tuple for 2 min from now and in UTC
 timesoon = time.gmtime(calendar.timegm(time.gmtime())+120)
@@ -239,3 +261,8 @@ for lane in range(0, lanes):
 print "stopping beams:"
 lcucommand = "ssh glow"+station_id+" ssh de"+station_id+"c killpointing " # + Pulsar
 lcuproc = os.popen(lcucommand)
+
+if len(observer) > 0:
+    if (args.Verbose):
+        print "quitting an instance of smtplib"
+    s.quit()
