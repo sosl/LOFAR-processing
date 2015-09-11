@@ -43,8 +43,14 @@ def monitor_process( p, notify, interrupt, verbose_out, timeout, sleep_interval 
         if not done(p):
             time.sleep(sleep_interval)
     #If still running, undertake some action:
-    if notify:
-        #TODO send an email
+    if notify and len(observers) > 0:
+        title = "[LOFAR-observing] " + args.Station + " problem with a child process"
+        body  = "Dear observer,\n\n"
+        body += "The observation of " + Pulsar + " with "
+        body += args.Station + " is having issues:\n\n"
+        body += verbose_out
+        body += "\n\nObservation monitoring system"
+        send message( title, body, observers, s)
     if interrupt:
         #kill the process
         p.terminate()
@@ -170,14 +176,31 @@ if args.StartTime:
         inttime-=int(timediff/60.)
         if inttime < 0:
             print "Observation late by " +str(timediff/60.)+ " minutes which is more than requested integration time of " +str(inttime) + ", skipping."
-            #TODO notify the observer
+            if args.Verbose and len(observers) > 0:
+                title="[LOFAR-observing] " + args.Station + " problem with  observation of "
+                title += Pulsar
+                body  = "Dear observer,\n\n"
+                body += "The observation of " + Pulsar + " with "
+                body += args.Station + " was late by more than the requested "
+                body += "integration time and was skipped. You may want to "
+                body += "investigate the cause of the delay.\n\n"
+                body += "Observation monitoring system" 
+                send_message( title, body, observers, s)
             exit(1)
         elif args.Verbose:
             print "Shortened the observation by " + str(int(timediff/60.)) + " minutes"
     elif timediff/60. > tolerance:
         if args.Verbose:
             print "Observation late by " + str(int(timediff/60.)) + " minutes."
-        #TODO notify the observer
+        if args.Verbose and len(observers) > 0:
+            title="[LOFAR-observing] " + args.Station + " problem with  observation of "
+            title += Pulsar
+            body  = "Dear observer,\n\n"
+            body += "The observation of " + Pulsar + " with "
+            body += args.Station + " was late by more than " + str(int(timediff/60.)
+            body += " minutes. You may want to investigate the cause of the delay.\n\n"
+            body += "Observation monitoring system" 
+            send_message( title, body, observers, s)
 
 sleeptime = 30.
 
