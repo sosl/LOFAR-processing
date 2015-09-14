@@ -29,7 +29,7 @@ def send_message( subject, text, recipients, smtp ):
     message['To'] = recipients[0]
     for i in range (1,len(recipients)):
         message['To'] += "," + recipients[i]
-    smtp.sendmail(me, recipients, msg.as_string())
+    smtp.sendmail(me, recipients, message.as_string())
 
 
 #monitor execution of a command and if it is not finished after a certain time
@@ -264,7 +264,7 @@ for n in range(nsleeps):
             print "Recording of lane " + str(lane) + " finished after " + str(n*sleeptime/60) + " minutes while the observation should have lasted " + str(waitminutes-1) + " minutes."
             #TODO email the observer
 #time.sleep(waitminutes*60.) #wait till udpdump starts. TODO Could instead monitor the status of the process. If failed, notify the observer
-        time.sleep(sleeptime)
+    time.sleep(sleeptime)
 
 nsleeps = int((endwait*60)/sleeptime)
 
