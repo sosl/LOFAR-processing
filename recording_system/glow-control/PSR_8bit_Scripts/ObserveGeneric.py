@@ -36,21 +36,21 @@ def send_message( subject, text, recipients, smtp ):
 #undertake an action, either notify the observer, or interrupt the command
 #timeout sleepinterval in seconds!
 #If process finished successfully return True. Otherwise return False
-def monitor_process( p, notify, interrupt, verbose_out, timeout, sleep_interval ):
+def monitor_process( p, observers, interrupt, verbose_out, timeout, sleep_interval ):
     #First allow the process to run for some amount of time (timeout) and check every sleep_interval seconds
-    iterations = int((sleep_interval)/timeout)
+    iterations = int(timeout/sleep_interval)
     for n in range(iterations):
         if not done(p):
             time.sleep(sleep_interval)
     #If still running, undertake some action:
-    if notify and len(observers) > 0:
+    if len(observers) > 0:
         title = "[LOFAR-observing] " + args.Station + " problem with a child process"
         body  = "Dear observer,\n\n"
         body += "The observation of " + Pulsar + " with "
         body += args.Station + " is having issues:\n\n"
         body += verbose_out
         body += "\n\nObservation monitoring system"
-        send message( title, body, observers, s)
+        send_message( title, body, observers, s)
     if interrupt:
         #kill the process
         p.terminate()
@@ -61,8 +61,10 @@ def monitor_process( p, notify, interrupt, verbose_out, timeout, sleep_interval 
     if len(verbose_out) > 0:
         print verbose_out
     final_status = p.poll()
-    if (final_status == bool):
+    if (type(final_status) == bool):
         return final_status
+    elif (type (final_status) == int):
+        return final_status == 0
     else:
         return False
 
@@ -197,7 +199,7 @@ if args.StartTime:
             title += Pulsar
             body  = "Dear observer,\n\n"
             body += "The observation of " + Pulsar + " with "
-            body += args.Station + " was late by more than " + str(int(timediff/60.)
+            body += args.Station + " was late by more than " + str(int(timediff/60.))
             body += " minutes. You may want to investigate the cause of the delay.\n\n"
             body += "Observation monitoring system" 
             send_message( title, body, observers, s)
@@ -205,26 +207,24 @@ if args.StartTime:
 sleeptime = 30.
 
 # Kill any remaining pointings first.
-lcucommand = "ssh glow"+station_id+" ssh de"+station_id+"c killpointing"
+lcucommand = ["ssh", "glow"+station_id, "ssh de"+station_id+"c killpointing"]
 lcuproc = sb.Popen( lcucommand )
 if args.Verbose:
     print "Killing existing pointings with:"
     print " - ", lcucommand
-ssh_success = monitor_process( lcuproc, notify=args.Observer_email, verbose_out="killpointing on LCU of " + station_id + " failed", timeout=180, sleep_interval=5 )
+ssh_success = monitor_process( lcuproc, observers, interrupt=False, verbose_out="killpointing on LCU of " + station_id + " failed", timeout=180, sleep_interval=5 )
 # Wait for successful end of the ssh or an intervation of the observer:
 while not ssh_success:
-    ssh_success = monitor_process( lcuproc, notify=args.Observer_email, verbose_out="killpointing on LCU of " + station_id + " failed", timeout=180, sleep_interval=5 )
+    print "in the while loop"
+    ssh_success = monitor_process( lcuproc, observers, interrupt=False, verbose_out="killpointing on LCU of " + station_id + " failed", timeout=180, sleep_interval=5 )
+    time.sleep(5)
 
 # start beams on the LCU
-lcucommand = "ssh glow" + station_id + " ssh de"+station_id + "c /data/home/user9/LCU-scripts/PSR_8bit_Scripts/observe-psr-universal.sh " + Pulsar + " " + str(lanes)
+lcucommand = "ssh glow" + station_id + " ssh -f de"+station_id + "c" + " '/data/home/user9/LCU-scripts/PSR_8bit_Scripts/observe-psr-universal.sh " + Pulsar + " " + str(lanes)+ "&'"
 if args.Verbose:
     print "Starting beams on the LCU with:"
     print " - ", lcucommand
-lcuproc = sb.Popen(lcucommand)
-ssh_success = monitor_process( lcuproc, notify=args.Observer_email, verbose_out="Forming a beam on " + station_id + " towards " + Pulsar + " failed", timeout=180, sleep_interval=5 )
-# Wait for successful end of the ssh or an intervation of the observer:
-while not ssh_success:
-    ssh_success = monitor_process( lcuproc, notify=args.Observer_email, verbose_out="Forming a beam on " + station_id + " towards " + Pulsar + " failed", timeout=180, sleep_interval=5 )
+lcuproc = os.popen(lcucommand)
 
 # Use LuMP
 if args.Verbose:
@@ -245,6 +245,7 @@ if args.Verbose:
     for lane in range(0, lanes):
         print recorder_command[lane]
 
+#sleep half a minute as there is a delay before beam formation
 time.sleep(30)
 
 recorder_processes = []
@@ -255,7 +256,15 @@ for lane in range(0, lanes):
 
 waitminutes = inttime+1.
 print "Waiting "+str(waitminutes)+" min for the observation to finish"
-time.sleep(waitminutes*60.) #wait till udpdump starts. Could instead monitor the status of the process. If failed, notify the observer
+nsleeps = int((waitminutes*60)/sleeptime)
+for n in range(nsleeps):
+    for lane in range(0, lanes):
+        #the process should be still running and thus poll should return None
+        if recorder_processes[lane].poll() != None:
+            print "Recording of lane " + str(lane) + " finished after " + str(n*sleeptime/60) + " minutes while the observation should have lasted " + str(waitminutes-1) + " minutes."
+            #TODO email the observer
+#time.sleep(waitminutes*60.) #wait till udpdump starts. TODO Could instead monitor the status of the process. If failed, notify the observer
+        time.sleep(sleeptime)
 
 nsleeps = int((endwait*60)/sleeptime)
 
@@ -285,7 +294,7 @@ print "stopping beams:"
 lcucommand = "ssh glow"+station_id+" ssh de"+station_id+"c killpointing " # + Pulsar
 lcuproc = os.popen(lcucommand)
 
-if len(observer) > 0:
+if len(observers) > 0:
     if (args.Verbose):
         print "quitting an instance of smtplib"
     s.quit()
