@@ -23,50 +23,16 @@ def done(p):
 
 me = "observer@glow-control"
 def send_message( subject, text, recipients, smtp ):
+    if args.Verbose:
+        print "Notifying the nominated observers:"
+	print recipients
     message = MIMEText(text)
     message['Subject']=subject
     message['From'] = me
     message['To'] = recipients[0]
-    for i in range (1,len(recipients)):
+    for i in range (1, len(recipients)):
         message['To'] += "," + recipients[i]
     smtp.sendmail(me, recipients, message.as_string())
-
-
-#monitor execution of a command and if it is not finished after a certain time
-#undertake an action, either notify the observer, or interrupt the command
-#timeout sleepinterval in seconds!
-#If process finished successfully return True. Otherwise return False
-def monitor_process( p, observers, interrupt, verbose_out, timeout, sleep_interval ):
-    #First allow the process to run for some amount of time (timeout) and check every sleep_interval seconds
-    iterations = int(timeout/sleep_interval)
-    for n in range(iterations):
-        if not done(p):
-            time.sleep(sleep_interval)
-    #If still running, undertake some action:
-    if len(observers) > 0:
-        title = "[LOFAR-observing] " + args.Station + " problem with a child process"
-        body  = "Dear observer,\n\n"
-        body += "The observation of " + Pulsar + " with "
-        body += args.Station + " is having issues:\n\n"
-        body += verbose_out
-        body += "\n\nObservation monitoring system"
-        send_message( title, body, observers, s)
-    if interrupt:
-        #kill the process
-        p.terminate()
-        time.sleep(1)
-        #Give processes a chance to terminate gracefully
-        if not done(p):
-            p.kill()
-    if len(verbose_out) > 0:
-        print verbose_out
-    final_status = p.poll()
-    if (type(final_status) == bool):
-        return final_status
-    elif (type (final_status) == int):
-        return final_status == 0
-    else:
-        return False
 
 
 parser = ArgumentParser();
@@ -75,7 +41,7 @@ s = None
     
 parser.add_argument("-P", "--psr", "--pulsar", dest="Pulsar",
         help="Name of the pulsar to be observed")
-parser.add_argument("-T","--tint", dest="TInt",
+parser.add_argument("-T", "--tint", dest="TInt",
         help="Integration time in minutes (default: 5.0)")
 parser.add_argument("--tolerance", dest="Tolerance",
         help="If observation late by these many minutes, print a warning and notify the observer")
@@ -83,11 +49,11 @@ parser.add_argument("--hard-tolerance", dest="HardTolerance",
         help="If observation late by these many minutes, shorten the observation")
 parser.add_argument("-O", "--observer", nargs='*', dest="Observers",
         help="Email of the observer(s) for observing notifications")
-parser.add_argument("-S","--starttime", dest="StartTime",
+parser.add_argument("-S", "--starttime", dest="StartTime",
         help="Time when to start the observation. "
         "(For LuMP: String in format yyyy-mm-ddThh:mm:ssZ) "
         "(default: start \"now\")")
-parser.add_argument("-W","--wait", dest="Wait",
+parser.add_argument("-W", "--wait", dest="Wait",
         help="Maximum wait time after observation is supposed "
         "to be finished in minutes (default: 3.0)")
 parser.add_argument("-v", "--verbose", dest="Verbose", action="store_true",
@@ -153,7 +119,7 @@ if args.Observers:
 
 #get the Python-style time-tuple for 2 min from now and in UTC
 timesoon = time.gmtime(calendar.timegm(time.gmtime())+120)
-starttime = time.strftime("%Y-%m-%dT%H:%M:00Z",timesoon)
+starttime = time.strftime("%Y-%m-%dT%H:%M:00Z", timesoon)
 
 # Tolerance for late observations, in minutes. Beyond this, email the observer
 tolerance = 12.
@@ -167,7 +133,7 @@ if args.HardTolerance:
 
 if args.StartTime:
     starttime = args.StartTime
-    # if starttime is significantly later than now, notify the observer
+    # if starttime is significantly earlier than now, notify the observer
     # could use:
     #    strptime to construct a tuple from requested start time
     #    use calendar.timegm() to convert to seconds since Epoch
@@ -176,9 +142,11 @@ if args.StartTime:
     if timediff/60. > hardTolerance:
         #shorten the observation:
         inttime-=int(timediff/60.)
+	starttime = time.strftime("%Y-%m-%dT%H:%M:00Z", timesoon)
         if inttime < 0:
-            print "Observation late by " +str(timediff/60.)+ " minutes which is more than requested integration time of " +str(inttime) + ", skipping."
-            if args.Verbose and len(observers) > 0:
+            if args.Verbose:
+	        print "Observation late by " + str(int(timediff/60.)) + " minutes which is more than requested integration time of " + str( int(inttime+timediff/60.) ) + ", skipping."
+            if len(observers) > 0:
                 title="[LOFAR-observing] " + args.Station + " problem with  observation of "
                 title += Pulsar
                 body  = "Dear observer,\n\n"
@@ -191,7 +159,19 @@ if args.StartTime:
             exit(1)
         elif args.Verbose:
             print "Shortened the observation by " + str(int(timediff/60.)) + " minutes"
+        if len(observers) > 0:
+            title="[LOFAR-observing] " + args.Station + " problem with  observation of "
+            title += Pulsar
+            body  = "Dear observer,\n\n"
+            body += "The observation of " + Pulsar + " with "
+            body += args.Station + " was siginifcantly late and was "
+            body += "shortened by " + str(int(timediff/60.)) + " minutes\n\n"
+            body += "You may want to investigate the cause of the delay.\n\n"
+            body += "Observation monitoring system" 
+            send_message( title, body, observers, s)
+
     elif timediff/60. > tolerance:
+	starttime = time.strftime("%Y-%m-%dT%H:%M:00Z", timesoon)
         if args.Verbose:
             print "Observation late by " + str(int(timediff/60.)) + " minutes."
         if args.Verbose and len(observers) > 0:
@@ -212,12 +192,44 @@ lcuproc = sb.Popen( lcucommand )
 if args.Verbose:
     print "Killing existing pointings with:"
     print " - ", lcucommand
-ssh_success = monitor_process( lcuproc, observers, interrupt=False, verbose_out="killpointing on LCU of " + station_id + " failed", timeout=180, sleep_interval=5 )
-# Wait for successful end of the ssh or an intervation of the observer:
-while not ssh_success:
-    print "in the while loop"
-    ssh_success = monitor_process( lcuproc, observers, interrupt=False, verbose_out="killpointing on LCU of " + station_id + " failed", timeout=180, sleep_interval=5 )
-    time.sleep(5)
+sleep_interval = 5
+timeout = 180
+iterations = int(timeout/sleep_interval)
+#First allow the process to run for some amount of time (timeout) and check every sleep_interval seconds.
+# ssh into LCU is quite slow, up to two minutes, but typically, 30-45 seconds I think.
+still_running=True
+for n in range(iterations):
+    #check status. Can be None if still running, +-1 if no beam was killed, and 0 if killed. Can it ever be a boolean? Note that poll negates the output status
+    final_status = lcuproc.poll()
+    if not (type(final_status)==int or type(final_status)==bool) :
+        time.sleep(sleep_interval)
+    else:
+        stillRunning=False
+        break
+# still running, likely ssh is hanging. Notify the observer and keep waiting
+message="ERROR: killpointing on LCU of " + station_id + " failed. Likely ssh is hanging."
+if stillRunning:
+    print message
+    if len(observers) > 0:
+        title = "[LOFAR-observing] " + args.Station + " problem with a child process"
+        body  = "Dear Observer,\n\n"
+        body += "The observation of " + Pulsar + " with "
+        body += args.Station + " is having issues:\n\n"
+        body += message
+        body += "\n\nObservation monitoring system"
+        send_message( title, body, observers, s)
+    while not (type(final_status)==int or type(final_status)==bool):
+        time.sleep(15)
+    else:
+        stilRunning = false
+	if len(observers) > 0:
+	    title = "[LOFAR-observing] " + args.Station + " problem with a child process"
+	    body  = "Dear Observer,\n\n"
+	    body += "The observation of " + Pulsar + " with "
+	    body += args.Station + " is having issues:\n\n"
+	    body += message
+	    body += "\n\nObservation monitoring system"
+	    send_message( title, body, observers, s)
 
 # start beams on the LCU
 lcucommand = "ssh glow" + station_id + " ssh -f de"+station_id + "c" + " '/data/home/user9/LCU-scripts/PSR_8bit_Scripts/observe-psr-universal.sh " + Pulsar + " " + str(lanes)+ "&'"
@@ -229,7 +241,7 @@ lcuproc = os.popen(lcucommand)
 # Use LuMP
 if args.Verbose:
     print "Using LuMP"
-data_dir=time.strftime("%Y-%m-%d-%H:%M",timesoon)
+data_dir=time.strftime("%Y-%m-%d-%H:%M", timesoon)
 recorder_command = []
 for lane in range(0, lanes):
     recorder_command.append("")
@@ -255,15 +267,27 @@ for lane in range(0, lanes):
             stdin=sb.PIPE, stdout=sb.PIPE, stderr=sb.PIPE, close_fds=True)
 
 waitminutes = inttime+1.
-print "Waiting "+str(waitminutes)+" min for the observation to finish"
+if args.Verbose:
+    print "Waiting "+str(waitminutes)+" min for the observation to finish"
 nsleeps = int((waitminutes*60)/sleeptime)
+lane_crashed=[]
+for lane in range(0, lanes):
+    lane_crashed.append(False)
 for n in range(nsleeps):
-    for lane in range(0, lanes):
+    for lane in [ i for i in range(lanes) if not lane_crashed[i] ]:
         #the process should be still running and thus poll should return None
         if recorder_processes[lane].poll() != None:
-            print "Recording of lane " + str(lane) + " finished after " + str(n*sleeptime/60) + " minutes while the observation should have lasted " + str(waitminutes-1) + " minutes."
-            #TODO email the observer
-#time.sleep(waitminutes*60.) #wait till udpdump starts. TODO Could instead monitor the status of the process. If failed, notify the observer
+            lane_crashed[lane] = True
+            message = "Recording of lane " + str(lane) + " finished after " + str(n*sleeptime/60) + " minutes while the observation should have lasted " + str(waitminutes-1) + " minutes. If all the lanes crashed then likely the beam was not formed or the BeamServer has crashed."
+            print message
+	    if len(observers) > 0:
+	        title = "[LOFAR-observing] " + args.Station + " problem with a child process"
+	        body  = "Dear Observer,\n\n"
+                body += "The observation of " + Pulsar + " with "
+                body += args.Station + " is having issues:\n\n"
+                body += message
+                body += "\n\nObservation monitoring system"
+                send_message( title, body, observers, s)
     time.sleep(sleeptime)
 
 nsleeps = int((endwait*60)/sleeptime)
