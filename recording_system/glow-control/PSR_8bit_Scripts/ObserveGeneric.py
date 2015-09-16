@@ -32,7 +32,21 @@ def send_message( subject, text, recipients, smtp ):
     message['To'] = recipients[0]
     for i in range (1, len(recipients)):
         message['To'] += "," + recipients[i]
-    smtp.sendmail(me, recipients, message.as_string())
+    try:
+        smtp.sendmail(me, recipients, message.as_string())
+    except SMTPServerDisconnected:
+        print "Problem sending message, couldn't connect to the mail server."
+        print "Will attempt to continue"
+        pass
+    except:
+        print "Unhandled error with SMTP. Will be ignored."
+        print "The type, value and traceback were:"
+        print sys.exc_info()[0]
+        print sys.exc_info()[1]
+        print sys.exc_info()[2]
+        pass
+
+
 
 
 parser = ArgumentParser();
@@ -286,7 +300,7 @@ for lane in range(0, lanes):
 for n in range(nsleeps):
     for lane in [ i for i in range(lanes) if not lane_crashed[i] ]:
         #the process should be still running and thus poll should return None
-        if recorder_processes[lane].poll() != None:
+        if recorder_processes[lane].poll() != None and n*sleeptime/60 < (waitminuets-1):
             lane_crashed[lane] = True
             message = "Recording of lane " + str(lane) + " finished after " + str(n*sleeptime/60) + " minutes while the observation should have lasted " + str(waitminutes-1) + " minutes. If all the lanes crashed then likely the beam was not formed or the BeamServer has crashed."
             print message
