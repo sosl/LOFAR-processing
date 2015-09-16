@@ -19,7 +19,7 @@ def append_observation(obs_id, psr, Tint, site, recorders, observers,
         obs_comand += "-O "
         for observer in observers:
             obs_command += observer + " "
-    if len(LCUPath > 0):
+    if len(LCUPath) > 0:
         obs_command += " --LCU " + LCUPath
     obs_command += " -v >> " + args.inputFile[0] + ".log\n\n"
     list.append(obs_command)
