@@ -43,6 +43,8 @@ parser.add_argument("-P", "--psr", "--pulsar", dest="Pulsar",
         help="Name of the pulsar to be observed")
 parser.add_argument("-T", "--tint", dest="TInt",
         help="Integration time in minutes (default: 5.0)")
+parser.add_argument("-L", "--LCU", dest="LCUPath",
+        help="How to get to the LCU.")
 parser.add_argument("--tolerance", dest="Tolerance",
         help="If observation late by these many minutes, print a warning and notify the observer")
 parser.add_argument("--hard-tolerance", dest="HardTolerance",
@@ -116,6 +118,14 @@ observers = []
 if args.Observers:
     observers = args.Observers
     s = smtplib.SMTP('localhost')
+
+LCUPath = ""
+if not args.LCUPath:
+    if args.Verbose:
+        print "--LCU wsa not used. Will try to guess the correct way to get to the LCU assuming usage of a German GLOW station."
+    LCUPath = "ssh glow" + station_id + " ssh de" + station_id + "c"
+else:
+    LCUPath = args.LCUPath
 
 #get the Python-style time-tuple for 2 min from now and in UTC
 timesoon = time.gmtime(calendar.timegm(time.gmtime())+120)
@@ -232,7 +242,7 @@ if stillRunning:
 	    send_message( title, body, observers, s)
 
 # start beams on the LCU
-lcucommand = "ssh glow" + station_id + " ssh -f de"+station_id + "c" + " '/data/home/user9/LCU-scripts/PSR_8bit_Scripts/observe-psr-universal.sh " + Pulsar + " " + str(lanes)+ "&'"
+lcucommand = LCUPath + " '/data/home/user9/LCU-scripts/PSR_8bit_Scripts/observe-psr-universal.sh " + Pulsar + " " + str(lanes)+ "&'"
 if args.Verbose:
     print "Starting beams on the LCU with:"
     print " - ", lcucommand
@@ -315,7 +325,7 @@ for lane in range(0, lanes):
         recorder_processes[lane].kill()
 
 print "stopping beams:"
-lcucommand = "ssh glow"+station_id+" ssh de"+station_id+"c killpointing " # + Pulsar
+lcucommand = LCUPath + " killpointing " # + Pulsar
 lcuproc = os.popen(lcucommand)
 
 if len(observers) > 0:
