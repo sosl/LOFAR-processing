@@ -1,0 +1,61 @@
+#!/bin/bash
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 1 on J1012+5307(expected at UTC: 2015-05-18 16:00 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J1012+5307-T 199 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 2 on J1239+2453(expected at UTC: 2015-05-18 19:20 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J1239+2453-T 143 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 3 on J1518+4904(expected at UTC: 2015-05-18 21:45 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J1518+4904-T 177 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 4 on J1848-1952(expected at UTC: 2015-05-19 00:44 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J1848-1952-T 161 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 5 on J2022+2854(expected at UTC: 2015-05-19 03:27 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J2022+2854-T 165 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 6 on J0034-0534(expected at UTC: 2015-05-19 06:15 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J0034-0534-T 224 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 7 on J0335+4555(expected at UTC: 2015-05-19 10:01 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J0335+4555-T 180 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 8 on J0659+1414(expected at UTC: 2015-05-19 13:03 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J0659+1414-T 168 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 9 on J0953+0755(expected at UTC: 2015-05-19 15:53 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J0953+0755-T 113 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 10 on J1022+1001(expected at UTC: 2015-05-19 17:48 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J1022+1001-T 264 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 11 on J1740+27(expected at UTC: 2015-05-19 22:13 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J1740+27-T 244 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -H -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 12 on J1939+2134(expected at UTC: 2015-05-20 02:19 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J1939+2134-T 136 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 13 on J2145-0750(expected at UTC: 2015-05-20 04:37 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J2145-0750-T 283 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Starting observation 14 on J0454+5543(expected at UTC: 2015-05-20 09:22 )'  | tee -a 2015-09-15_DE601.list.log
+~/PSR_8bitScripts/ObserveGeneric.py -P J0454+5543-T 366 -s DE601 -R C1 C2 C2  --LCU ssh glow601 ssh de601c -v >> 2015-09-15_DE601.list.log
+
+date | tee -a 2015-09-15_DE601.list.log
+echo 'Finished observing' | tee -a 2015-09-15_DE601.list.log
+ssh glow601 ssh de601c 'swlevel 0' | tee -a 2015-09-15_DE601.list.log
