@@ -135,9 +135,11 @@ if args.Observers:
 
 LCUPath = ""
 if not args.LCUPath:
+    LCUPath = "ssh glow" + station_id + " ssh de" + station_id + "c"
     if args.Verbose:
         print "--LCU was not used. Will try to guess the correct way to get to the LCU assuming usage of a German GLOW station."
-    LCUPath = "ssh glow" + station_id + " ssh de" + station_id + "c"
+        print "Will use:"
+        print LCUPath
 else:
     LCUPath = args.LCUPath
 
