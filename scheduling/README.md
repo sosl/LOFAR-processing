@@ -1,4 +1,4 @@
-The script CreateSched.py reads an input file as created by observePulsars.py to create a schedule file. The format of the input file is:
+The script CreateSched.py (in recording_system/glow-control) reads an input file as created by observePulsars.py to create a schedule file. The format of the input file is:
 PSR TINT TZONE: HH:MM TZONE: YYYY-MM-DD HH:MM TYPE
 Where:
  * PSR is the pulsar to be observed
