@@ -59,6 +59,8 @@ parser.add_argument("-T", "--tint", dest="TInt",
         help="Integration time in minutes (default: 5.0)")
 parser.add_argument("-L", "--LCU", dest="LCUPath",
         help="How to get to the LCU.")
+parser.add_argument("-H", "--high-resolution", dest="highResolution",
+        help="Use LuMP format 1. Useful for over-resolving the original filterbank")
 parser.add_argument("--tolerance", dest="Tolerance",
         help="If observation late by these many minutes, print a warning and notify the observer")
 parser.add_argument("--hard-tolerance", dest="HardTolerance",
@@ -123,6 +125,10 @@ Pulsar = args.Pulsar
 inttime = 5.
 if args.TInt:
     inttime = float(args.TInt)
+
+LuMP_version = 0
+if args.highResolution:
+    LuMP_version = 1
 
 endwait = 3.
 if args.Wait:
@@ -269,12 +275,13 @@ if args.Verbose:
     print "Using LuMP"
 data_dir=time.strftime("%Y-%m-%d-%H:%M", timesoon)
 recorder_command = []
+recorder_verbosity = 1
 for lane in range(0, lanes):
     recorder_command.append("")
     recorder_command[lane] = "ssh lofar" + args.Recorders[lane] + " '~/PSR_8bit_Scripts/RunLuMP_universal.sh "
     recorder_command[lane] += Pulsar + " " + str(inttime)  + " " + data_dir
     recorder_command[lane] += " " + starttime + " DE"+station_id + " " + str(lane+1) + " "
-    recorder_command[lane] += str(subband_offset) + " 1" # 1 here is the verbosity level 
+    recorder_command[lane] += str(subband_offset) + str(recorder_verbosity) + " " + str(LuMP_version)
     recorder_command[lane] += " >> ~/PSR_Logs/LuMP_"+data_dir+"_"+Pulsar+"_lane"
     recorder_command[lane] += str(lane+1) + ".log 2>&1' "
 
@@ -302,7 +309,7 @@ for lane in range(0, lanes):
 for n in range(nsleeps):
     for lane in [ i for i in range(lanes) if not lane_crashed[i] ]:
         #the process should be still running and thus poll should return None
-        if recorder_processes[lane].poll() != None and n*sleeptime/60 < (waitminuets-1):
+        if recorder_processes[lane].poll() != None and n*sleeptime/60 < (waitminutes-1):
             lane_crashed[lane] = True
             message = "Recording of lane " + str(lane) + " finished after " + str(n*sleeptime/60) + " minutes while the observation should have lasted " + str(waitminutes-1) + " minutes. If all the lanes crashed then likely the beam was not formed or the BeamServer has crashed."
             print message

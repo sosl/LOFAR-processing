@@ -8,27 +8,20 @@
 
 set -o nounset
 
-if [[ $# -ne 8 ]]
+if [[ $# -ne 9 ]]
 then
-    echo usage: $0 PSR Tint datadir starttime station lane subband_offset verbosity_level
+    echo usage: $0 PSR Tint datadir starttime station lane subband_offset verbosity_level LuMP_version
     echo Tint is in minutes
     echo subband_offset should match the setup of the beam, see observe-psr-universal.sh on the LCU
     echo for 4 lanes it should be 12 and for 3 lanes set it to 93
+    echo For normal observations use LuMP_version 0. For high-frequency resolution use 1
     exit
 fi
 
 verbose=$8
+LuMP_version=$9
 
 PSR=$1
-
-# pulsars for which high resolution data need to be produced to study scintillation:
-if [[ "$PSR" == "J0837+0610" ]] 
-then
-	LuMP_version=0
-else
-	LuMP_version=1
-fi
-
 
 [[ $verbose -gt 0 ]] && echo "Will observe Pulsar " $PSR
 

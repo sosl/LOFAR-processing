@@ -359,7 +359,10 @@ def makeSchedule(observationList, site, begin, end, deadline, timePenalty,
         print "...no time limits specified"
 
     # create initial schedule with optimal timing (but overlap):
-    for (pulsar, dur, priority) in observationList:
+    for (pulsar, dur, priority, obs_type) in observationList:
+        if obs_type.upper() != "NORMAL" and obs_type.upper() != "HIGHRES":
+            print "Unsupported type of observation. Must be NORMAL or HIGHRES"
+            exit(1)
         duration = int(dur)
         lststring = re.split("[JB+-]", pulsar)[1]
         if verbose > 2:
@@ -376,7 +379,7 @@ def makeSchedule(observationList, site, begin, end, deadline, timePenalty,
         if verbose > 2:
             print "  ...optimal UTC observation time start:", start,"stop:",stop
 
-        job = (pulsar, start, stop, optimalUTC, priority)
+        job = (pulsar, start, stop, optimalUTC, priority, resolution, obs_type)
         schedule.append(job)
 
     # sort initial schedule by optimal UTC
@@ -789,7 +792,7 @@ def main():
         if verbose > 0:
             print "Writing schedule to", outputPath
         #f.write("# Pulsar \t Duration \t Start UTC \t Stop UTC \t Optimal UTC \t Priority\t Start LST \t Stop LST\n")
-        for (pulsar, start, stop, optimalUTC, priority) in schedule:
+        for (pulsar, start, stop, optimalUTC, priority, obs_type) in schedule:
             #3 lines inserted by STEFAN
             start_date = matplotlib.dates.date2num(start)
             stop_date = matplotlib.dates.date2num(stop)
@@ -799,7 +802,7 @@ def main():
                 line = pulsar+"\t"+str(duration)+"\t"+str(start)+"\t"+str(stop)+"\t"+str(optimalUTC)+"\t"+str(priority)+"\t"+site.localSiderialTime(start, returntype="string")+"\t"+site.localSiderialTime(stop, returntype="string")
             else:
                 line = pulsar + " " + str(int(duration*24*60+0.5)-2) + ' LST: ' + site.localSiderialTime(start, returntype="string")[0:5]
-                line += " UTC: " + str(start)[0:16]
+                line += " UTC: " + str(start)[0:16] + " " + obs_type
             f.write(line+"\n")
 
     # start observation

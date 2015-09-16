@@ -4,7 +4,7 @@
 country_codes = [ "PL", "DE", "SE", "FR", "UK" ]
 
 def append_observation(obs_id, psr, Tint, site, recorders, observers,
-        expectedStart, log, LCUPath, list):
+        expectedStart, log, LCUPath, obs_type, list):
     list.append("date" + log)
     notification = "echo 'Starting observation " + obs_id + " on " + psr
     if len(expectedStart) > 0:
@@ -21,6 +21,7 @@ def append_observation(obs_id, psr, Tint, site, recorders, observers,
             obs_command += observer + " "
     if len(LCUPath) > 0:
         obs_command += " --LCU " + LCUPath
+    obs_command += obs_type
     obs_command += " -v >> " + args.inputFile[0] + ".log\n\n"
     list.append(obs_command)
 
@@ -122,10 +123,17 @@ first_obs = True
 obs_id = 1
 for line in lines:
     elements = line.split()
-    if len(elements) != 7:
+    if len(elements) != 7 and len(elements) !=8:
         print "Unsupported format of the input!"
-        print "Please ensure the following 7-column format:"
-        print "psr Tint LST: hh:mm UTC: yyyy-mm-dd hh:mm"
+        print "Please ensure the following 7- or 8-column format:"
+        print "psr Tint LST: hh:mm UTC: yyyy-mm-dd hh:mm [obstype]"
+        print "psr is the name of the pulsar."
+        print "Tint is integration time in minutes"
+        print "LST is the LST at the observatory during the start of observation"
+        print "This is included only for convenience of humans inspecting the file."
+        print "UTC is the expected start time. Used to check if observations are working correctly and e.g., to tell the station to wait until the source rises."
+        print "Accepted values for obstype are NORMAL and HIGHRES"
+        print "This determines the version of LuMP format to be used."
         exit(1)
     psr = elements[0]
     Tint = elements[1]
@@ -139,13 +147,12 @@ for line in lines:
         print "Currently only UTC is accepted"
         exit(1)
     UTC = elements[4] + " " + elements[5] + " " + elements[6]
-    #print line
-    #print "PSR: " + psr
-    #print "Tint: " + Tint
-    #print "LST: " + LST
-    #print "UTC: " + UTC
+    obsType=""
+    if len(elements) == 8:
+        if elements[7] == "HIGHRES":
+            obsType = " -H"
     append_observation(str(obs_id), psr, str(Tint), site, args.Recorders,
-            observers, UTC, print_to_tty_and_log, LCUPath, outputLines)
+            observers, UTC, print_to_tty_and_log, LCUPath, obsType, outputLines)
     obs_id += 1
 
 if args.LCUPowerDown:
