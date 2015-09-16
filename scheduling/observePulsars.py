@@ -798,10 +798,8 @@ def main():
             if args.observe:
                 line = pulsar+"\t"+str(duration)+"\t"+str(start)+"\t"+str(stop)+"\t"+str(optimalUTC)+"\t"+str(priority)+"\t"+site.localSiderialTime(start, returntype="string")+"\t"+site.localSiderialTime(stop, returntype="string")
             else:
-                line = '# ' + pulsar + ' LST: ' + site.localSiderialTime(start, returntype="string")[0:5]
-                line += " UTC: " + str(start)[0:16] + "\n"
-                line += pulsar + " " + str(int(duration*24*60+0.5)-2) + " "
-                line += str(start)[0:16]
+                line = pulsar + " " + str(int(duration*24*60+0.5)-2) + ' LST: ' + site.localSiderialTime(start, returntype="string")[0:5]
+                line += " UTC: " + str(start)[0:16]
             f.write(line+"\n")
 
     # start observation
