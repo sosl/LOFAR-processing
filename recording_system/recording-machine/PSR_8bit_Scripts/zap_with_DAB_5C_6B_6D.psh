@@ -1,0 +1,13 @@
+#!/usr/bin/env psrsh
+
+#remove DAB channel 5C (extended 45 kHz at the bottom to include the bottom channel):
+zap freq 177.539:179.120
+#remove DAB channel 6B (extended 70 kHz at the bottom to include the bottom channel):
+zap freq 182.810:184.416
+#remove most of DAB channel 6D (the 186.304-186.6 part doesn't seem to contain much power):
+zap freq 186.710:187.900
+
+zap median window=16
+zap median
+zap mow robust
+zap mow
