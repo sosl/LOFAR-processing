@@ -379,7 +379,7 @@ def makeSchedule(observationList, site, begin, end, deadline, timePenalty,
         if verbose > 2:
             print "  ...optimal UTC observation time start:", start,"stop:",stop
 
-        job = (pulsar, start, stop, optimalUTC, priority, resolution, obs_type)
+        job = (pulsar, start, stop, optimalUTC, priority, obs_type)
         schedule.append(job)
 
     # sort initial schedule by optimal UTC

@@ -75,7 +75,7 @@ function reduce_single_obs
   cd $pulsar
   cd $observation
 
-  ~/PSR_8bit_Scripts/AnalyseLuMP_dual_lane_3lanes.sh $station $pulsar $threads >> ~/PSR_Logs/${datum}.${pulsar}.${observation}.log 2>&1
+  ~/PSR_8bit_Scripts/AnalyseLuMP_universal.sh $station $pulsar $threads >> ~/PSR_Logs/${datum}.${pulsar}.${observation}.log 2>&1
   nsub=`psredit -c nchan -qQ [JB]*.ar | awk '{SUM+=$1}END{print SUM}'`
   if [ "${nsub:-0}" -eq $desired_channels ]
   then
