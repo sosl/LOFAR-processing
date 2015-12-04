@@ -41,7 +41,7 @@ defaultInputPath = None
 # Config:
 maxObsDays = 4  # in case no limit is specified
 sites = dict(DE609=obstools.Site(lat=coords.AngularCoordinate('53d42m0s'),
-                                       long=coords.AngularCoordinate('9d85m50s'),
+                                       long=coords.AngularCoordinate('9d58m50s'),
                                        name="DE609"),
              DE601=obstools.Site(lat=coords.AngularCoordinate('50d31m0s'),
                                  long=coords.AngularCoordinate('6d53m0s'),
