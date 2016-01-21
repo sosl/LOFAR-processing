@@ -37,6 +37,7 @@ fi
 
 #data_dir=/media/scratch/observer/LuMP
 data_dir=/media/scratch/observer/LuMP_${station}
+failed_dir=/media/scratch/observer/LuMP_${station}_failed
 cd $data_dir
 
 datum=`date | awk '{print $6"-"$2"-"$3}'`
@@ -65,6 +66,7 @@ lanes=$Node
   threads=$2
   data_dir=$3
   station=$4
+  failed_dir=$5
   echo "Now going to work on pulsar $pulsar  " `date`
   #mkdir -p /media/scratch/observer/LuMP_reduced/${pulsar}
   mkdir -p ${data_dir}_reduced/${pulsar}
@@ -87,6 +89,8 @@ lanes=$Node
     else
       cd ..
       echo "Problem with pulsar " $pulsar " observation " $observation
+      mkdir -p ${failed_dir}/${pulsar}
+      mv $observation ${failed_dir}/${pulsar}
     fi
   done
   cd $data_dir
@@ -180,7 +184,7 @@ then
 		    dm_int=`echo $DM | awk '{print int($1)}'`
 		    if [ $dm_int -ge 55 ]
 		    then
-			    reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station
+			    reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $failed_dir
 		    fi
 	    done
     fi
