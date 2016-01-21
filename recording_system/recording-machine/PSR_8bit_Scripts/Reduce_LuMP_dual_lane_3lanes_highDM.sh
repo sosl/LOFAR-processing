@@ -89,10 +89,11 @@ function reduce_single
       echo "Problem with pulsar " $pulsar " observation " $observation
       mkdir -p ${failed_dir}/${pulsar}
       mv $observation ${failed_dir}/${pulsar}
+      echo Moved the observation to ${failed_dir}/${pulsar}
     fi
   done
   cd $data_dir
-  rmdir $pulsar
+  rmdir --ignore-fail-on-non-empty $pulsar
 }
 
 function reduce_single_obs
@@ -142,6 +143,7 @@ function reduce_single_obs
 	  echo "Problem with pulsar " $pulsar " observation " $observation
 	  mkdir -p ${failed_dir}/${pulsar}
 	  mv $observation ${failed_dir}/${pulsar}
+          echo Moved the observation to ${failed_dir}/${pulsar}
   fi
 
   cd $data_dir
