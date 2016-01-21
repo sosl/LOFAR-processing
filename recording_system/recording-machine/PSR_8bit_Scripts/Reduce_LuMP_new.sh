@@ -37,6 +37,7 @@ fi
 
 #data_dir=/media/scratch/observer/LuMP
 data_dir=/media/scratch/observer/LuMP_${station}
+failed_dir=/media/scratch/observer/LuMP_${station}_failed
 cd $data_dir
 
 datum=`date | awk '{print $6"-"$2"-"$3}'`
@@ -72,6 +73,7 @@ function reduce_single
 	threads=$2
 	data_dir=$3
 	station=$4
+        failed_dir=$5
 	if [[ $# -eq 5 ]]
 	then
 		channels=$5
@@ -101,76 +103,78 @@ function reduce_single
 		else
 			cd ..
 			echo "Problem with pulsar " $pulsar " observation " $observation
-		fi
-	done
-	cd $data_dir
-	rmdir $pulsar
-}
+                        mkdir -p ${failed_dir}/${pulsar}
+                        mv $observation ${failed_dir}/${pulsar}
+                      fi
+                    done
+                    cd $data_dir
+                    rmdir $pulsar
+                  }
 
-export PYTHONPATH
-export USE_LUMP_PULSAR_STUFF=1
-#. /opt/lump/lump_2.0/SETUP.sh
-shopt -s expand_aliases
-. ~/PSR_8bit_Scripts/setup.sh
+                  export PYTHONPATH
+                  export USE_LUMP_PULSAR_STUFF=1
+                  #. /opt/lump/lump_2.0/SETUP.sh
+                  shopt -s expand_aliases
+                  . ~/PSR_8bit_Scripts/setup.sh
 
 
-if [ $Half -eq 0 ]
-then 
-    echo "Reducing all pulsars in " `pwd`
-    for pulsar in `ls -1`
-    do
-      reduce_single $pulsar $threads $data_dir $station
-    done
-elif [ $Half -eq 1 ]
-then
-    echo "Reducing first half of pulsars in " `pwd`
-    NPSR=`ls -1 | wc -w | awk '{print int($1/2)+int($1/2)%2}'`
-    for pulsar in `ls -1 | head -${NPSR}`
-    do
-      reduce_single $pulsar $threads $data_dir $station
-    done
-elif [ $Half -eq 2 ]
-then
-    echo "Reducing second half of pulsars in " `pwd`
-    NPSR=`ls -1 | wc -w | awk '{print int($1/2)}'`
-    for pulsar in `ls -1 | tail -${NPSR}`
-    do
-      reduce_single $pulsar $threads $data_dir $station
-    done
-elif [ $Half -eq 3 ]
-then
-    echo Reducing all pulsars in  `pwd` in an ascending order of DM
-    declare -A DMS
-    declare -A PULSARS_BY_DM
-    for pulsar in `ls -1`
-    do
-      dm=`psrcat -c DM $pulsar -nohead -nonumber -o short | awk '{print $1}'`
-      DMS[$pulsar]=$dm
-      PULSARS_BY_DM[$dm]=$pulsar
-    done
-    readarray -t DM_sorted < <(printf '%s\0' "${DMS[@]}" | sort -z -g | xargs -0n1)
-    for DM in "${DM_sorted[@]}"
-    do
-      reduce_single ${PULSARS_BY_DM[$DM]} $threads $data_dir $station
-    done
-elif [ $Half -eq 4 ]
-then
-    echo "Reducing all pulsars while observing, skipping the latest observation."
-    for pulsar in `ls -rt1 | head -n -1`
-    do
-      dm=`psrcat -c DM $pulsar -nohead -nonumber -o short | awk '{print int($1)}'`
-      if [ $dm -lt 60 ]
-      then
-        reduce_single $pulsar $threads_while_observing $data_dir $station
-      fi
-    done
-elif [ $Half -eq 5 ]
-then
-    #echo Reducing all pulsars while observing in  `pwd` in an ascending order of DM
-    declare -A DMS
-    declare -A PULSARS_BY_DM
-    current=`current_obs`
-    if [[ "$current" == "" ]]
+                  if [ $Half -eq 0 ]
+                  then 
+                    echo "Reducing all pulsars in " `pwd`
+                    for pulsar in `ls -1`
+                    do
+                      reduce_single $pulsar $threads $data_dir $station
+                    done
+                  elif [ $Half -eq 1 ]
+                  then
+                    echo "Reducing first half of pulsars in " `pwd`
+                    NPSR=`ls -1 | wc -w | awk '{print int($1/2)+int($1/2)%2}'`
+                    for pulsar in `ls -1 | head -${NPSR}`
+                    do
+                      reduce_single $pulsar $threads $data_dir $station
+                    done
+                  elif [ $Half -eq 2 ]
+                  then
+                    echo "Reducing second half of pulsars in " `pwd`
+                    NPSR=`ls -1 | wc -w | awk '{print int($1/2)}'`
+                    for pulsar in `ls -1 | tail -${NPSR}`
+                    do
+                      reduce_single $pulsar $threads $data_dir $station
+                    done
+                  elif [ $Half -eq 3 ]
+                  then
+                    echo Reducing all pulsars in  `pwd` in an ascending order of DM
+                    declare -A DMS
+                    declare -A PULSARS_BY_DM
+                    for pulsar in `ls -1`
+                    do
+                      dm=`psrcat -c DM $pulsar -nohead -nonumber -o short | awk '{print $1}'`
+                      DMS[$pulsar]=$dm
+                      PULSARS_BY_DM[$dm]=$pulsar
+                    done
+                    readarray -t DM_sorted < <(printf '%s\0' "${DMS[@]}" | sort -z -g | xargs -0n1)
+                    for DM in "${DM_sorted[@]}"
+                    do
+                      reduce_single ${PULSARS_BY_DM[$DM]} $threads $data_dir $station
+                    done
+                  elif [ $Half -eq 4 ]
+                  then
+                    echo "Reducing all pulsars while observing, skipping the latest observation."
+                    for pulsar in `ls -rt1 | head -n -1`
+                    do
+                      dm=`psrcat -c DM $pulsar -nohead -nonumber -o short | awk '{print int($1)}'`
+                      if [ $dm -lt 60 ]
+                      then
+                        reduce_single $pulsar $threads_while_observing $data_dir $station
+                      fi
+                    done
+                  elif [ $Half -eq 5 ]
+                  then
+                    #echo Reducing all pulsars while observing in  `pwd` in an ascending order of DM
+                    declare -A DMS
+                    declare -A PULSARS_BY_DM
+                    current=`current_obs`
+                    if [[ "$current" == "" ]]
     then
 	    #current=`ls -rtd1 [B,J]* | tail -n 1`
 	    current=""
@@ -204,7 +208,7 @@ then
 				    channels=""
 			    fi
 			    #echo reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $channels
-			    reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $channels
+			    reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $channels $failed_dir
 		    fi
 	    done
     fi
