@@ -42,6 +42,7 @@ fi
 
 #data_dir=/media/scratch/observer/LuMP
 data_dir=/media/scratch/observer/LuMP_${station}
+failed_dir=/media/scratch/observer/LuMP_${station}_failed
 cd $data_dir
 
 datum=`date | awk '{print $6"-"$2"-"$3}'`
@@ -74,6 +75,7 @@ function reduce_single
   threads=$2
   data_dir=$3
   station=$4
+  failed_dir=$5
   if [[ $# -eq 5 ]]
   then
 	  channels=$5
@@ -104,12 +106,13 @@ function reduce_single
       rm -rf ToThrow_$lanes
       rm -f eph.par
       cd ..
-      #mv $observation ${data_dir}_reduced/$pulsar/
       mv $observation ${data_dir}_reduced/$pulsar/
       chmod g+w ${data_dir}_reduced/$pulsar/${observation}
     else
       cd ..
       echo "Problem with pulsar " $pulsar " observation " $observation
+      mkdir -p ${failed_dir}/${pulsar}
+      mv $observation ${failed_dir}/${pulsar}
     fi
   done
   cd $data_dir
@@ -211,7 +214,7 @@ then
 				    channels=""
 			    fi
 			    #echo reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $channels
-			    reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $channels
+			    reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $channels $failed_dir
 		    fi
 	    done
     fi
