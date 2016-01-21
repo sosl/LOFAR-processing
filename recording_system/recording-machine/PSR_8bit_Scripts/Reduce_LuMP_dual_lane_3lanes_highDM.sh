@@ -36,7 +36,7 @@ fi
 
 #data_dir=/media/scratch/observer/LuMP
 data_dir=/media/scratch/observer/LuMP_${station}
-failed_dir=/media/scratch/observer/LuMP_failed
+failed_dir=/media/scratch/observer/LuMP_${station}_failed
 cd $data_dir
 
 datum=`date | awk '{print $6"-"$2"-"$3}'`
