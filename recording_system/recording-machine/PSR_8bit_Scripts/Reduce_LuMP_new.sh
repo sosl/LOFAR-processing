@@ -74,9 +74,9 @@ function reduce_single
   data_dir=$3
   station=$4
   failed_dir=$5
-  if [[ $# -eq 5 ]]
+  if [[ $# -eq 6 ]]
   then
-    channels=$5
+    channels=$6
   else
     channels=122
   fi
@@ -89,7 +89,6 @@ function reduce_single
   for observation in `ls -1d 20[0-9]*`
   do 
     cd $observation
-    echo ~/PSR_8bit_Scripts/AnalyseLuMP_new.sh $station $pulsar $threads $channels 
     ~/PSR_8bit_Scripts/AnalyseLuMP_new.sh $station $pulsar $threads $channels >> ~/PSR_Logs/${datum}.${pulsar}.${observation}.log 2>&1
     nsub=`psredit -c nchan -qQ [JB]*.ar | awk '{SUM+=$1}END{print SUM}'`
     if [ "${nsub:-0}" -eq 122 ]
@@ -97,7 +96,6 @@ function reduce_single
       rm -rf ToThrow_$lanes
       rm -f eph.par
       cd ..
-      #mv $observation ${data_dir}_reduced/$pulsar/
       mv $observation ${data_dir}_reduced/$pulsar/
       chmod g+w ${data_dir}_reduced/$pulsar/${observation}
     else
@@ -209,7 +207,7 @@ then
           channels=""
         fi
         #echo reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $channels
-        reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $channels $failed_dir
+        reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $failed_dir $channels 
       fi
     done
   fi

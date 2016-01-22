@@ -76,9 +76,9 @@ function reduce_single
   data_dir=$3
   station=$4
   failed_dir=$5
-  if [[ $# -eq 5 ]]
+  if [[ $# -eq 6 ]]
   then
-	  channels=$5
+	  channels=$6
   else
 	  channels=122
   fi
@@ -215,7 +215,7 @@ then
 				    channels=""
 			    fi
 			    #echo reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $channels
-			    reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $channels $failed_dir
+			    reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $failed_dir $channels 
 		    fi
 	    done
     fi
