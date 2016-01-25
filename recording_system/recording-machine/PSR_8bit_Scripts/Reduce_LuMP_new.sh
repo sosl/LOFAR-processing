@@ -44,7 +44,7 @@ datum=`date | awk '{print $6"-"$2"-"$3}'`
 
 function reduce_single
 {
-  if [[ $# -lt 4 ]] || [[ $# -gt 5 ]]
+  if [[ $# -lt 5 ]] || [[ $# -gt 6 ]]
   then
     echo 'No pulsars found (most likely)'
     echo received $# args
