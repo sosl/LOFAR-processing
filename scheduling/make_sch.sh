@@ -15,5 +15,3 @@ do
 	python observePulsars.py -v 0 -b $1 $2 -d $3 $4 -s ${station} -o ${station}.sch -D 5000 -I 200 pulsars_${station}.dat
 	mv gantt.svg ${station}.svg
 done
-
-echo now run convert.sh to create .list files
