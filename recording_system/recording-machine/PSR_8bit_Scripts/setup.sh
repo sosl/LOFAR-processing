@@ -27,6 +27,7 @@ alias rsync_DE601_bielefeld='rsync --chmod=ug+w -O -av -e "ssh -p 1234" --progre
 alias rsync_DE602_bielefeld='rsync --chmod=ug+w -O -av -e "ssh -p 1234" --progress /media/scratch/observer/LuMP_DE602_reduced/ soslowski@127.0.0.1:/lofardata/DE602_new'
 alias rsync_DE603_bielefeld='rsync --chmod=ug+w -O -av -e "ssh -p 1234" --progress /media/scratch/observer/LuMP_DE603_reduced/ soslowski@127.0.0.1:/lofardata/DE603_new'
 alias rsync_DE605_bielefeld='rsync --chmod=ug+w -O -av -e "ssh -p 1234" --progress /media/scratch/observer/LuMP_DE605_reduced/ soslowski@127.0.0.1:/lofardata/DE605_new'
+alias rsync_DE609_bielefeld='rsync --chmod=ug+w -O -av -e "ssh -p 1234" --progress /media/scratch/observer/LuMP_DE609_reduced/ soslowski@127.0.0.1:/lofardata/DE609_new'
 
 alias rsync_DE601_lofarsrv='cd /media/scratch/observer/LuMP_DE601_reduced; rmdir */*/*/SubBands_?; rsync --chmod=ug+w -O -av --remove-source-files -e "ssh" --progress /media/scratch/observer/LuMP_DE601_reduced/ lofarsrv:/media/part1/observer/LuMP/DE601; cd /media/scratch/observer/LuMP_DE601_reduced/; rmdir -p --ignore-fail-on-non-empty */*/*; ls'
 alias rsync_DE602_lofarsrv='cd /media/scratch/observer/LuMP_DE602_reduced; rmdir */*/*/SubBands_?; rsync --chmod=ug+w -O -av --remove-source-files -e "ssh" --progress /media/scratch/observer/LuMP_DE602_reduced/ lofarsrv:/media/part1/observer/LuMP/DE602; cd /media/scratch/observer/LuMP_DE602_reduced/; rmdir -p --ignore-fail-on-non-empty */*/*; ls'
