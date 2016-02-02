@@ -19,9 +19,9 @@ alias check_test_obs='cd $(ls -1rtd /media/scratch/observer/LuMP_DE60?_reduced/B
 alias check_test_obs_ps='cd $(ls -1rtd /media/scratch/observer/LuMP_DE60?_reduced/B*/2*/ | tail -n1); . ~/PSR_8bit_Scripts/setup.sh ; ~/PSR_8bit_Scripts/zap_with_DAB_5C_6B_6D.psh -ez B*ar; psrplot -jDTp -pF -D test_obs.ps/CPS B*z'
 
 alias list_P0DM='psrcat -all -x -c "JNAME DM P0" `ls -1d [B,J]*`'
-alias bielefeld_data_tunnel='mkdir -p ~/.ssh/control/; ssh -M -S ~/.ssh/control/bielefeld_data_socket -NfL 1234:lofarfs:22 soslowski@entry2.physik.uni-bielefeld.de'
+alias bielefeld_data_tunnel='mkdir -p ~/.ssh/control/; ssh -M -4 -S ~/.ssh/control/bielefeld_data_socket -NfL 1234:lofarfs:22 soslowski@entry2.physik.uni-bielefeld.de'
 alias bielefeld_data_tunnel_close='ssh -S ~/.ssh/control/bielefeld_data_socket -O exit soslowski@entry2.physik.uni-bielefeld.de'
-alias wsd4so_data_tunnel='mkdir -p ~/.ssh/control/; ssh -M -S ~/.ssh/control/wsd4so_data_socket -NfL 1233:wsd4so:22 soslowski@entry2.physik.uni-bielefeld.de'
+alias wsd4so_data_tunnel='mkdir -p ~/.ssh/control/; ssh -M -4 -S ~/.ssh/control/wsd4so_data_socket -NfL 1233:wsd4so:22 soslowski@entry2.physik.uni-bielefeld.de'
 alias wsd4so_data_tunnel_close='ssh -S ~/.ssh/control/wsd4so_data_socket -O exit soslowski@entry2.physik.uni-bielefeld.de'
 alias rsync_DE601_bielefeld='rsync --chmod=ug+w -O -av -e "ssh -p 1234" --progress /media/scratch/observer/LuMP_DE601_reduced/ soslowski@127.0.0.1:/lofardata/DE601_new'
 alias rsync_DE602_bielefeld='rsync --chmod=ug+w -O -av -e "ssh -p 1234" --progress /media/scratch/observer/LuMP_DE602_reduced/ soslowski@127.0.0.1:/lofardata/DE602_new'
