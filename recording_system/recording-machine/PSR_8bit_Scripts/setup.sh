@@ -15,8 +15,8 @@ mkdir -p ../${station}_reduced/${psr}
 mv ${psr}/${epoch} ../${station}_reduced/${psr}/
 rmdir ${psr}
 }
-alias check_test_obs='cd /media/scratch/observer/LuMP_DE60?_reduced/B*/2*/; . ~/PSR_8bit_Scripts/setup.sh ; ~/PSR_8bit_Scripts/zap_with_DAB_5C_6B_6D.psh -ez B*ar; for x in B*z; do pazi $x; done; rm B*z'
-alias check_test_obs_ps='cd /media/scratch/observer/LuMP_DE60?_reduced/B*/2*/; . ~/PSR_8bit_Scripts/setup.sh ; ~/PSR_8bit_Scripts/zap_with_DAB_5C_6B_6D.psh -ez B*ar; psrplot -jDTp -pF -D test_obs.ps/CPS B*z'
+alias check_test_obs='cd $(ls -1rtd /media/scratch/observer/LuMP_DE60?_reduced/B*/2*/ | tail -n1); . ~/PSR_8bit_Scripts/setup.sh ; ~/PSR_8bit_Scripts/zap_with_DAB_5C_6B_6D.psh -ez B*ar; for x in B*z; do pazi $x; done; rm B*z'
+alias check_test_obs_ps='cd $(ls -1rtd /media/scratch/observer/LuMP_DE60?_reduced/B*/2*/ | tail -n1); . ~/PSR_8bit_Scripts/setup.sh ; ~/PSR_8bit_Scripts/zap_with_DAB_5C_6B_6D.psh -ez B*ar; psrplot -jDTp -pF -D test_obs.ps/CPS B*z'
 
 alias list_P0DM='psrcat -all -x -c "JNAME DM P0" `ls -1d [B,J]*`'
 alias bielefeld_data_tunnel='mkdir -p ~/.ssh/control/; ssh -M -S ~/.ssh/control/bielefeld_data_socket -NfL 1234:lofarfs:22 soslowski@entry2.physik.uni-bielefeld.de'
