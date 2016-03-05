@@ -133,7 +133,7 @@ then
       else
 	channels=""
       fi
-      reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $failed_dir $channels 
+      reduce_single ${PULSARS_BY_DM[$DM]} $threads $data_dir $station $failed_dir $channels 
     fi
   done
 fi
