@@ -68,10 +68,10 @@ function reduce_single
   fi
 
   pulsar=$1 
-  #if [[ "$pulsar" = "J0837+0610" ]]
-  #then
-	  #desired_channels=$(echo $desired_channels"*39" | bc)
-  #fi
+  if [[ "$pulsar" = "J0837+0610" ]]
+  then
+	  desired_channels=$(echo $desired_channels"*39" | bc)
+  fi
   threads=$2
   data_dir=$3
   station=$4
@@ -83,39 +83,43 @@ function reduce_single
 	  channels=122
   fi
   echo "Now going to work on pulsar $pulsar  " `date`
-  #mkdir -p /media/scratch/observer/LuMP_reduced/${pulsar}
   mkdir -p ${data_dir}_reduced/${pulsar}
-  #chmod g+w /media/scratch/observer/LuMP_reduced/${pulsar}
   chmod g+w ${data_dir}_reduced/${pulsar}
   cd $pulsar
-  for observation in `ls -1d 20[0-9]*`
-  do 
-    cd $observation
-    current_obs_utc=`current_obs_with_utc | awk -F/ '{print $2}'`
-    if [ "$observation" == "$current_obs_utc" ]
-    then
-	    echo Observation $observation of pulsar $pulsar is ongoing!
-	    current_obs
-	    current_obs_with_utc
-	    break
-    fi
-     ~/PSR_8bit_Scripts/AnalyseLuMP_dual_lane_3lanes.sh $station $pulsar $threads $channels >> ~/PSR_Logs/${datum}.${pulsar}.${observation}.log 2>&1
-    nsub=`psredit -c nchan -qQ [JB]*.ar | awk '{SUM+=$1}END{print SUM}'`
-    if [ "${nsub:-0}" -eq $desired_channels ]
-    then
-      rm -rf ToThrow_$lanes
-      rm -f eph.par
-      cd ..
-      mv $observation ${data_dir}_reduced/$pulsar/
-      chmod g+w ${data_dir}_reduced/$pulsar/${observation}
-    else
-      cd ..
-      echo "Problem with pulsar " $pulsar " observation " $observation
-      mkdir -p ${failed_dir}/${pulsar}
-      mv $observation ${failed_dir}/${pulsar}
-      echo Moved the observation to ${failed_dir}/${pulsar}
-    fi
-  done
+  current_obs_utc=`current_obs_with_utc | awk -F/ '{print $2}'`
+  if [[ "$current_obs_utc" == "" ]]
+  then
+	  current_obs_utc=""
+  else
+	  current_obs_utc="| grep -v $current_obs_utc"
+  fi
+
+  if [ $(eval "ls -rtd1 20[0-9]* $current_obs_utc 2>&1 | grep -v 'cannot access 20' | wc -l") -gt 0 ]
+  then 
+	  echo will process $(eval "ls -rtd1 20[0-9]* $current_obs_utc 2>&1 | grep -v 'cannot access 20'")
+	  for observation in $(eval "ls -1d 20[0-9]* $current_obs_utc 2>&1 | grep -v 'cannot access 20'")
+	  do 
+		  cd $observation
+		  ~/PSR_8bit_Scripts/AnalyseLuMP_dual_lane_3lanes.sh $station $pulsar $threads $channels >> ~/PSR_Logs/${datum}.${pulsar}.${observation}.log 2>&1
+		  nsub=`psredit -c nchan -qQ [JB]*.ar | awk '{SUM+=$1}END{print SUM}'`
+		  if [ "${nsub:-0}" -eq $desired_channels ]
+		  then
+			  rm -rf ToThrow_$lanes
+			  rm -f eph.par
+			  cd ..
+			  mv $observation ${data_dir}_reduced/$pulsar/
+			  chmod g+w ${data_dir}_reduced/$pulsar/${observation}
+		  else
+			  cd ..
+			  echo "Problem with pulsar " $pulsar " observation " $observation
+			  mkdir -p ${failed_dir}/${pulsar}
+			  mv $observation ${failed_dir}/${pulsar}
+			  echo Moved the observation to ${failed_dir}/${pulsar}
+		  fi
+	  done
+  else
+	  echo "Only ongoing observation present, will not process"
+  fi
   cd $data_dir
   rmdir --ignore-fail-on-non-empty $pulsar
 }
@@ -182,20 +186,10 @@ then
     #echo Reducing all pulsars while observing in  `pwd` in an ascending order of DM
     declare -A DMS
     declare -A PULSARS_BY_DM
-    current=`current_obs`
-    if [[ "$current" == "" ]]
-    then
-	    #current=`ls -rtd1 [B,J]* | tail -n 1`
-	    current=""
-    else
-	    current="| grep -v $current"
-    fi
     #if [ `ls -rtd1 [B,J]* | head -n -1 | wc -l` -gt 0 ]
-    if [ `eval "ls -rtd1 [B,J]* $current 2>&1 | grep -v 'cannot access [B,J]*' | wc -l"` -gt 0 ]
+    if [ `eval "ls -rtd1 [B,J]* 2>&1 | grep -v 'cannot access' | wc -l"` -gt 0 ]
     then
-	    #for pulsar in `ls -rt1 | head -n -1`
-	    #for pulsar in `ls -rtd1 [B,J]* | grep -v $current`
-	    for pulsar in `eval "ls -rtd1 [B,J]* $current 2>&1 | grep -v 'cannot access [B,J]*'"`
+	    for pulsar in `eval "ls -rtd1 [B,J]* 2>&1 | grep -v 'cannot access'"`
 	    do
 		    dm=`psrcat -c DM $pulsar -nohead -nonumber -o short | awk '{print $1}'`
 		    DMS[$pulsar]=$dm
@@ -214,11 +208,8 @@ then
 			    else
 				    channels=""
 			    fi
-			    #echo reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $channels
 			    reduce_single ${PULSARS_BY_DM[$DM]} $threads_while_observing $data_dir $station $failed_dir $channels 
 		    fi
 	    done
     fi
 fi
-
-#echo Finished. `date`
