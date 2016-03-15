@@ -29,6 +29,13 @@ alias rsync_DE603_bielefeld='rsync --chmod=ug+w -O -av -e "ssh -p 1234" --progre
 alias rsync_DE605_bielefeld='rsync --chmod=ug+w -O -av -e "ssh -p 1234" --progress /media/scratch/observer/LuMP_DE605_reduced/ soslowski@127.0.0.1:/lofardata/DE605_new'
 alias rsync_DE609_bielefeld='rsync --chmod=ug+w -O -av -e "ssh -p 1234" --progress /media/scratch/observer/LuMP_DE609_reduced/ soslowski@127.0.0.1:/lofardata/DE609_new'
 
+alias rsync_DE601_juelich='rsync --chmod=ug+w -O -av --progress /media/scratch/observer/LuMP_DE601_reduced/ glow.fz-juelich.de:/nfs/data/observer/DE601_new/'
+alias rsync_DE602_juelich='rsync --chmod=ug+w -O -av --progress /media/scratch/observer/LuMP_DE602_reduced/ glow.fz-juelich.de:/nfs/data/observer/DE602_new/'
+alias rsync_DE603_juelich='rsync --chmod=ug+w -O -av --progress /media/scratch/observer/LuMP_DE603_reduced/ glow.fz-juelich.de:/nfs/data/observer/DE603_new/'
+alias rsync_DE605_juelich='rsync --chmod=ug+w -O -av --progress /media/scratch/observer/LuMP_DE605_reduced/ glow.fz-juelich.de:/nfs/data/observer/DE605_new/'
+alias rsync_DE609_juelich='rsync --chmod=ug+w -O -av --progress /media/scratch/observer/LuMP_DE609_reduced/ glow.fz-juelich.de:/nfs/data/observer/DE609_new/'
+
+
 alias rsync_DE601_lofarsrv='cd /media/scratch/observer/LuMP_DE601_reduced; rmdir */*/*/SubBands_?; rsync --chmod=ug+w -O -av --remove-source-files -e "ssh" --progress /media/scratch/observer/LuMP_DE601_reduced/ lofarsrv:/media/part1/observer/LuMP/for_archiving/DE601; cd /media/scratch/observer/LuMP_DE601_reduced/; rmdir -p --ignore-fail-on-non-empty */*/*; ls'
 alias rsync_DE601_lofarsrv_noremove='cd /media/scratch/observer/LuMP_DE601_reduced; rmdir */*/*/SubBands_?; rsync --chmod=ug+w -O -av -e "ssh" --progress /media/scratch/observer/LuMP_DE601_reduced/ lofarsrv:/media/part1/observer/LuMP/for_archiving/DE601; cd /media/scratch/observer/LuMP_DE601_reduced/'
 alias rsync_DE602_lofarsrv='cd /media/scratch/observer/LuMP_DE602_reduced; rmdir */*/*/SubBands_?; rsync --chmod=ug+w -O -av --remove-source-files -e "ssh" --progress /media/scratch/observer/LuMP_DE602_reduced/ lofarsrv:/media/part1/observer/LuMP/for_archiving/DE602; cd /media/scratch/observer/LuMP_DE602_reduced/; rmdir -p --ignore-fail-on-non-empty */*/*; ls'
