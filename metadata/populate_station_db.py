@@ -110,8 +110,6 @@ for station in args.Stations:
         if args.Verbose:
             print "Retrieved all needed values"
 
-        cadence_avg =0
-
         values.append((psr, MJD_min, MJD_max, count, days, time_span, cadence, Tint_min, Tint_max, Tint_avg, bw, avg_elevation))
         psrConnection.close()
 
