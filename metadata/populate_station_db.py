@@ -63,6 +63,7 @@ elevationQuery = 'SELECT AVG(relative_elevation) from obs'
 
 for station in args.Stations:
     psrDBs = glob.glob(dbTopPath + "/db/"+station+"/*db")
+    psrDBs.sort()
     # list of values for insertion:
     values = []
     for psrDB in psrDBs:
